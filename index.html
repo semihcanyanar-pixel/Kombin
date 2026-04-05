@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+
+<html lang="tr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Kombin"/>
+<link rel="manifest" href="manifest.json"/>
+<title>Kombin – Stil Asistanın</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+  import { getRemoteConfig, fetchAndActivate, getValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-remote-config.js";
+  const firebaseConfig = {
+    apiKey:"YOUR_FIREBASE_API_KEY",
+    authDomain:"YOUR_PROJECT.firebaseapp.com",
+    projectId:"YOUR_PROJECT_ID",
+    storageBucket:"YOUR_PROJECT.appspot.com",
+    messagingSenderId:"YOUR_SENDER_ID",
+    appId:"YOUR_APP_ID"
+  };
+  const app=initializeApp(firebaseConfig);
+  const auth=getAuth(app),db=getFirestore(app),storage=getStorage(app);
+  const remoteConfig=getRemoteConfig(app);
+  remoteConfig.settings.minimumFetchIntervalMillis=3600000;
+  window._fb={auth,db,storage,remoteConfig,signInAnonymously,onAuthStateChanged,
+    collection,addDoc,getDocs,deleteDoc,doc,ref,uploadBytes,getDownloadURL,fetchAndActivate,getValue};
+</script>
+<style>
+:root{--bg:#111;--sf:#1c1c1c;--bd:#2c2c2c;--tx:#e8e8e8;--mu:#777;--ac:#e60023;--wh:#fff;--gap:10px;--rad:16px;--pw:272px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:antialiased}
+#ls{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s}
+#ls .ll{font-size:2.4rem;font-weight:700;color:var(--ac);animation:pu 1.6s ease-in-out infinite}
+#ls p{color:var(--mu);font-size:.82rem;margin-top:8px}
+@keyframes pu{0%,100%{opacity:1}50%{opacity:.35}}
+.shell{display:flex;height:100vh;width:100vw}
+.lp{width:var(--pw);min-width:var(--pw);background:var(--sf);border-right:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;transition:transform .28s cubic-bezier(.4,0,.2,1)}
+.lpb{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:70px}
+.lpb::-webkit-scrollbar{width:3px}.lpb::-webkit-scrollbar-thumb{background:#333;border-radius:3px}
+.logo{padding:16px 16px 13px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.logo-i{width:32px;height:32px;background:var(--ac);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.logo-n{font-size:1rem;font-weight:600;color:var(--wh)}.logo-s{font-size:.65rem;color:var(--mu);margin-top:1px}
+.sb{padding:13px 13px 9px;border-bottom:1px solid var(--bd)}
+.sb textarea{width:100%;background:#252525;border:1px solid #333;border-radius:22px;padding:9px 15px;font-family:'DM Sans';font-size:.8rem;color:var(--tx);resize:none;outline:none;min-height:60px;line-height:1.45;transition:border-color .2s}
+.sb textarea::placeholder{color:var(--mu)}.sb textarea:focus{border-color:#555}
+.sgo{margin-top:7px;width:100%;background:var(--ac);color:#wh;border:none;border-radius:22px;padding:9px 0;font-size:.8rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .18s;color:#fff}
+.sgo:hover{opacity:.87}
+.spin{width:12px;height:12px;border:2px solid #fff3;border-top-color:#fff;border-radius:50%;animation:spin .65s linear infinite;display:none}
+.sgo.ld .spin{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sec{padding:12px 13px 9px;border-bottom:1px solid var(--bd)}
+.sec-h{font-size:.63rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin-bottom:9px}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{padding:5px 11px;border-radius:18px;background:#252525;border:1px solid #333;font-size:.73rem;color:var(--mu);cursor:pointer;transition:all .15s;user-select:none}
+.chip:hover{border-color:#555;color:var(--tx)}.chip.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.gp{display:flex;gap:5px;padding:11px 13px 5px}
+.gp button{flex:1;padding:6px 0;border-radius:9px;background:#252525;border:1px solid #333;font-size:.73rem;color:var(--mu);cursor:pointer;transition:all .15s}
+.gp button.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.apply{display:block;margin:9px 13px 13px;padding:11px 0;background:var(--ac);color:#fff;border:none;border-radius:22px;cursor:pointer;font-size:.82rem;font-weight:600;transition:opacity .18s;width:calc(100% - 26px);text-align:center}
+.apply:hover{opacity:.87}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.nav{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--sf);border-bottom:1px solid var(--bd);flex-shrink:0}
+.ntabs{display:flex;background:#252525;border-radius:22px;padding:3px;gap:2px}
+.ntab{padding:6px 16px;border-radius:18px;border:none;background:transparent;font-family:'DM Sans';font-size:.78rem;color:var(--mu);cursor:pointer;transition:all .18s;font-weight:500;white-space:nowrap}
+.ntab.on{background:var(--wh);color:#111;font-weight:700}
+.pills{display:flex;gap:5px;flex:1;overflow:hidden;flex-wrap:nowrap}
+.pill{padding:4px 10px;border-radius:13px;background:#2a2a2a;font-size:.7rem;color:var(--tx);display:flex;align-items:center;gap:4px;white-space:nowrap}
+.pill button{background:none;border:none;color:var(--mu);cursor:pointer;font-size:9px}
+.panel{display:none;flex:1;overflow-y:auto;padding:var(--gap)}.panel.on{display:block}
+.panel::-webkit-scrollbar{width:4px}.panel::-webkit-scrollbar-thumb{background:#2a2a2a;border-radius:4px}
+.pgrid{column-gap:var(--gap)}.pgrid.c1{columns:1}.pgrid.c2{columns:2}.pgrid.c3{columns:3}.pgrid.c4{columns:4}
+.pcard{break-inside:avoid;margin-bottom:var(--gap);border-radius:var(--rad);overflow:hidden;position:relative;cursor:pointer;background:#2a2a2a;transition:transform .18s}
+.pcard:hover{transform:scale(1.015)}
+.pcard img{width:100%;display:block;object-fit:cover;min-height:120px}
+.pov{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.65) 0%,transparent 45%);opacity:0;transition:opacity .2s;border-radius:var(--rad);display:flex;flex-direction:column;justify-content:flex-end;padding:11px}
+.pcard:hover .pov{opacity:1}.ptitle{color:#fff;font-size:.73rem;font-weight:500}
+.pstar{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:14px;border:1px solid rgba(255,255,255,.12)}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:62vh;gap:10px}
+.empty .ico{font-size:2.8rem;opacity:.3}.empty p{font-size:.88rem;color:var(--mu)}
+.empty small{font-size:.75rem;color:#444;text-align:center;max-width:200px;line-height:1.5}
+.gtbar{display:flex;align-items:center;gap:7px;margin-bottom:11px;flex-wrap:wrap}
+.gsel{flex:1;padding:7px 13px;border-radius:18px;border:1px solid var(--bd);background:#252525;color:var(--tx);font-size:.78rem;outline:none;min-width:0}
+.gbx{padding:7px 13px;border-radius:18px;border:none;background:var(--ac);color:#fff;font-size:.78rem;cursor:pointer;font-weight:600;transition:opacity .18s;white-space:nowrap}
+.gbx:hover{opacity:.85}.gbx.s{background:#2a2a2a;color:var(--tx)}.gbx.s:hover{background:#333}
+.atabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:9px}
+.ach{padding:4px 12px;border-radius:18px;border:1px solid var(--bd);background:#252525;font-size:.72rem;color:var(--mu);cursor:pointer;transition:all .15s}
+.ach.on{background:var(--wh);color:#111;border-color:var(--wh);font-weight:700}
+.ulim{font-size:.7rem;color:var(--mu);margin-bottom:7px}
+.gg{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap)}
+.gi{border-radius:11px;overflow:hidden;background:#2a2a2a;position:relative;cursor:pointer;aspect-ratio:3/4;transition:transform .17s}
+.gi:hover{transform:scale(1.025)}.gi img{width:100%;height:100%;object-fit:cover;display:block}
+.gi-alb{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.75));padding:18px 7px 6px;font-size:.65rem;color:#ccc}
+.gd{position:absolute;top:5px;right:5px;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);border:none;border-radius:50%;width:25px;height:25px;cursor:pointer;font-size:11px;display:none;align-items:center;justify-content:center;color:#fff}
+.gi:hover .gd{display:flex}
+.uz{border:2px dashed #2e2e2e;border-radius:13px;padding:28px;text-align:center;cursor:pointer;color:var(--mu);font-size:.8rem;transition:all .2s}
+.uz:hover{border-color:#444;background:#1e1e1e}.uz .ui{font-size:1.8rem;margin-bottom:5px}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:500;padding:18px;backdrop-filter:blur(10px)}
+.md{background:var(--sf);border-radius:18px;padding:20px;max-width:380px;width:100%;box-shadow:0 20px 70px rgba(0,0,0,.7);border:1px solid var(--bd)}
+.md h3{font-size:1.05rem;font-weight:600;color:var(--wh);margin-bottom:11px}
+.md input,.md select{width:100%;padding:8px 13px;border:1px solid var(--bd);border-radius:11px;font-size:.82rem;outline:none;margin-bottom:9px;color:var(--tx);background:#252525;font-family:'DM Sans'}
+.mdb{display:flex;gap:7px;margin-top:4px}
+.mdb button{flex:1;padding:9px 0;border-radius:11px;border:none;font-size:.82rem;cursor:pointer;font-weight:600;font-family:'DM Sans'}
+.mdb .ok{background:var(--ac);color:#fff}.mdb .cc{background:#2a2a2a;color:var(--tx)}
+.md img{width:100%;border-radius:11px;max-height:68vh;object-fit:contain}
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:#2c2c2c;color:var(--wh);padding:9px 20px;border-radius:22px;font-size:.78rem;z-index:1000;white-space:nowrap;border:1px solid #3a3a3a;animation:fup .28s ease;pointer-events:none}
+@keyframes fup{from{opacity:0;transform:translateX(-50%) translateY(9px)}}
+#mfab{display:none;position:fixed;bottom:20px;left:20px;z-index:200;background:var(--ac);color:#fff;border:none;border-radius:50%;width:46px;height:46px;font-size:1.15rem;cursor:pointer;box-shadow:0 4px 18px rgba(230,0,35,.45);align-items:center;justify-content:center}
+#mbk{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:99}
+@media(max-width:740px){
+  .lp{position:fixed;left:0;top:0;bottom:0;z-index:100;transform:translateX(-100%)}
+  .lp.open{transform:translateX(0)}
+  #mbk.open{display:block}
+  #mfab{display:flex}
+  .pgrid.c3,.pgrid.c4{columns:2}
+  .gg{grid-template-columns:repeat(2,1fr)}
+  .pills{display:none}
+}
+</style>
+</head>
+<body>
+<div id="ls"><div class="ll">Kombin</div><p>Hazırlanıyor…</p></div>
+<div class="shell" id="app" style="display:none">
+  <div class="lp" id="sidebar">
+    <div class="logo">
+      <div class="logo-i">👗</div>
+      <div><div class="logo-n">Kombin</div><div class="logo-s">Stil Asistanın ✨</div></div>
+    </div>
+    <div class="lpb">
+      <div class="sb">
+        <textarea id="q" placeholder="Kadın kış spor kombin…" rows="3"></textarea>
+        <button class="sgo" id="sgo" onclick="doSearch()">
+          <span class="spin"></span>
+          <span id="slbl">🔍 AI ile Ara</span>
+        </button>
+      </div>
+      <div class="sec"><div class="sec-h">👗 Tarz</div>
+        <div class="chips" id="cs">
+          <div class="chip" data-v="Casual">Casual</div>
+          <div class="chip" data-v="Smart Casual">Smart Casual</div>
+          <div class="chip" data-v="Spor">Spor</div>
+          <div class="chip" data-v="Klasik">Klasik</div>
+          <div class="chip" data-v="Boho">Boho</div>
+        </div>
+      </div>
+      <div class="sec"><div class="sec-h">🧍 Kimler için</div>
+        <div class="chips" id="cg">
+          <div class="chip" data-v="Kadın">Kadın</div>
+          <div class="chip" data-v="Erkek">Erkek</div>
+          <div class="chip" data-v="Kız Çocuk">Kız Çocuk</div>
+          <div class="chip" data-v="Erkek Çocuk">Erkek Çocuk</div>
+        </div>
+      </div>
+      <div class="sec"><div class="sec-h">🌿 Mevsim</div>
+        <div class="chips" id="cm">
+          <div class="chip" data-v="İlkbahar">İlkbahar</div>
+          <div class="chip" data-v="Yaz">Yaz</div>
+          <div class="chip" data-v="Sonbahar">Sonbahar</div>
+          <div class="chip" data-v="Kış">Kış</div>
+        </div>
+      </div>
+      <div class="sec-h" style="padding:12px 13px 6px">📐 Izgara</div>
+      <div class="gp" id="gp">
+        <button onclick="setGrid(1)">1</button>
+        <button onclick="setGrid(2)">2</button>
+        <button class="on" onclick="setGrid(3)">3</button>
+        <button onclick="setGrid(4)">4</button>
+      </div>
+      <button class="apply" onclick="applyFilters()">✨ Kombinleri Göster</button>
+    </div>
+  </div>
+  <div class="main">
+    <div class="nav">
+      <div class="ntabs">
+        <button class="ntab on" onclick="switchTab('discover',this)">🏠 Keşfet</button>
+        <button class="ntab" onclick="switchTab('gallery',this)">👚 Gardrobum</button>
+      </div>
+      <div class="pills" id="pills"></div>
+    </div>
+    <div class="panel on" id="tab-discover">
+      <div class="empty" id="empty"><div class="ico">✨</div><p>Kombinler burada görünecek</p><small>Sol panelden filtre seç veya arama yap</small></div>
+      <div class="pgrid c3" id="pgrid"></div>
+    </div>
+    <div class="panel" id="tab-gallery">
+      <div class="gtbar">
+        <select class="gsel" id="alb-sel"></select>
+        <button class="gbx s" onclick="openAlbumModal()">+ Albüm</button>
+        <button class="gbx" onclick="openUpload()">📷 Ekle</button>
+      </div>
+      <div class="atabs" id="atabs"></div>
+      <div class="ulim" id="ulim">0 / 50 fotoğraf</div>
+      <div class="gg" id="gg"></div>
+    </div>
+  </div>
+</div>
+<button id="mfab" onclick="toggleSide()">☰</button>
+<div id="mbk" onclick="toggleSide()"></div>
+<div id="mw"></div>
+<script>
+let userId=null,claudeKey='',googleKey='',googleCx='',unsplashKey='';
+let grid=3,filters={style:null,gender:null,season:null};
+let gallery=[],albums=['Günlük','Spor','İş','Özel Gün'],curAlbum='',pinResults=[];
+
+async function init(){
+const{auth,signInAnonymously,onAuthStateChanged,remoteConfig,fetchAndActivate,getValue}=window._fb;
+try{await signInAnonymously(auth);}catch(e){hideLoading();return;}
+onAuthStateChanged(auth,async user=>{
+if(!user)return;
+userId=user.uid;
+try{
+await fetchAndActivate(remoteConfig);
+claudeKey=getValue(remoteConfig,‘claude_api_key’).asString();
+googleKey=getValue(remoteConfig,‘google_api_key’).asString();
+googleCx=getValue(remoteConfig,‘google_cx’).asString();
+unsplashKey=getValue(remoteConfig,‘unsplash_access_key’).asString();
+}catch(e){}
+await loadGallery();
+hideLoading();
+});
+}
+
+function hideLoading(){
+const ls=document.getElementById(‘ls’);
+ls.style.opacity=‘0’;
+setTimeout(()=>{ls.style.display=‘none’;document.getElementById(‘app’).style.display=‘flex’;},400);
+}
+
+[‘cs’,‘cg’,‘cm’].forEach(id=>{
+document.getElementById(id).addEventListener(‘click’,e=>{
+const chip=e.target.closest(’.chip’);if(!chip)return;
+const was=chip.classList.contains(‘on’);
+document.getElementById(id).querySelectorAll(’.chip’).forEach(c=>c.classList.remove(‘on’));
+if(!was)chip.classList.add(‘on’);
+const key=id===‘cs’?‘style’:id===‘cg’?‘gender’:‘season’;
+filters[key]=was?null:chip.dataset.v;
+renderPills();
+});
+});
+
+function renderPills(){
+const w=document.getElementById(‘pills’);w.innerHTML=’’;
+const map={style:filters.style,gender:filters.gender,season:filters.season};
+Object.entries(map).forEach(([k,v])=>{
+if(!v)return;
+const d=document.createElement(‘div’);d.className=‘pill’;
+d.innerHTML=`${v} <button onclick="clearFilter('${k}')">✕</button>`;
+w.appendChild(d);
+});
+}
+
+function clearFilter(key){
+filters[key]=null;
+const id=key===‘style’?‘cs’:key===‘gender’?‘cg’:‘cm’;
+document.getElementById(id).querySelectorAll(’.chip’).forEach(c=>c.classList.remove(‘on’));
+renderPills();
+}
+
+function setGrid(n){
+grid=n;
+document.getElementById(‘gp’).querySelectorAll(‘button’).forEach((b,i)=>b.classList.toggle(‘on’,i+1===n));
+document.getElementById(‘pgrid’).className=`pgrid c${n}`;
+}
+
+function switchTab(name,btn){
+document.querySelectorAll(’.panel’).forEach(p=>p.classList.remove(‘on’));
+document.querySelectorAll(’.ntab’).forEach(b=>b.classList.remove(‘on’));
+document.getElementById(‘tab-’+name).classList.add(‘on’);
+btn.classList.add(‘on’);
+}
+
+function toggleSide(){
+document.getElementById(‘sidebar’).classList.toggle(‘open’);
+document.getElementById(‘mbk’).classList.toggle(‘open’);
+}
+
+function setLoading(on){
+document.getElementById(‘sgo’).classList.toggle(‘ld’,on);
+document.getElementById(‘slbl’).textContent=on?‘Aranıyor…’:‘🔍 AI ile Ara’;
+}
+
+async function doSearch(){
+const q=document.getElementById(‘q’).value.trim();
+if(!q){toast(‘Lütfen bir arama yazın’);return;}
+setLoading(true);
+try{
+const r=await refineWithClaude(q);
+await fetchImages(r);
+document.querySelectorAll(’.panel’).forEach(p=>p.classList.remove(‘on’));
+document.getElementById(‘tab-discover’).classList.add(‘on’);
+document.querySelectorAll(’.ntab’).forEach((b,i)=>b.classList.toggle(‘on’,i===0));
+if(window.innerWidth<740)toggleSide();
+}catch(e){toast(’Hata: ’+e.message);}
+finally{setLoading(false);}
+}
+
+async function applyFilters(){
+if(!filters.style&&!filters.gender&&!filters.season){toast(‘En az bir filtre seçin’);return;}
+const q=[filters.gender,filters.season,filters.style,‘kombin’].filter(Boolean).join(’ ‘);
+setLoading(true);
+try{
+const r=await refineWithClaude(q);
+await fetchImages(r);
+document.querySelectorAll(’.panel’).forEach(p=>p.classList.remove(‘on’));
+document.getElementById(‘tab-discover’).classList.add(‘on’);
+document.querySelectorAll(’.ntab’).forEach((b,i)=>b.classList.toggle(‘on’,i===0));
+if(window.innerWidth<740)toggleSide();
+}catch(e){toast(’Hata: ’+e.message);}
+finally{setLoading(false);}
+}
+
+async function refineWithClaude(q){
+if(!claudeKey){
+const map={‘kadın’:‘women’,‘erkek’:‘men’,‘kız çocuk’:‘girls’,‘erkek çocuk’:‘boys’,‘spor’:‘sporty athletic’,‘casual’:‘casual’,‘smart casual’:‘smart casual’,‘klasik’:‘classic formal’,‘boho’:‘bohemian’,‘kış’:‘winter’,‘yaz’:‘summer’,‘ilkbahar’:‘spring’,‘sonbahar’:‘fall’,‘kombin’:‘outfit look’};
+let r=q.toLowerCase();
+Object.entries(map).forEach(([tr,en])=>{r=r.replace(tr,en);});
+return r+’ fashion style’;
+}
+const resp=await fetch(‘https://api.anthropic.com/v1/messages’,{
+method:‘POST’,
+headers:{‘x-api-key’:claudeKey,‘anthropic-version’:‘2023-06-01’,‘content-type’:‘application/json’},
+body:JSON.stringify({model:‘claude-sonnet-4-20250514’,max_tokens:60,
+system:‘Convert Turkish fashion queries to English image search terms (4-7 words). Return ONLY the query.’,
+messages:[{role:‘user’,content:q}]})
+});
+const d=await resp.json();
+return d.content?.[0]?.text?.trim()||q+’ outfit’;
+}
+
+async function fetchImages(query){
+const[gI,uI]=await Promise.all([fetchGoogle(query),fetchUnsplash(query)]);
+const merged=[];let gi=0,ui=0;
+while(merged.length<30){
+if(gi<gI.length&&merged.length%3<2)merged.push(gI[gi++]);
+else if(ui<uI.length)merged.push(uI[ui++]);
+else if(gi<gI.length)merged.push(gI[gi++]);
+else break;
+}
+const scored=merged.map(img=>({img,s:galScore(img)}));
+scored.sort((a,b)=>b.s-a.s);
+pinResults=scored.map(x=>x.img);
+renderPins();
+}
+
+async function fetchGoogle(query){
+if(!googleKey||!googleCx)return[];
+try{
+const url=`https://www.googleapis.com/customsearch/v1?key=${googleKey}&cx=${googleCx}&q=${encodeURIComponent(query+' outfit fashion')}&searchType=image&num=10&imgSize=large&imgType=photo&safe=active`;
+const d=await(await fetch(url)).json();
+return(d.items||[]).map(item=>({url:item.link,thumb:item.image?.thumbnailLink||item.link,title:item.title||query,tags:exTags(item.title||’’)}));
+}catch(e){return[];}
+}
+
+async function fetchUnsplash(query){
+if(unsplashKey){
+try{
+const url=`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=15&orientation=portrait&client_id=${unsplashKey}`;
+const d=await(await fetch(url)).json();
+if(d.results?.length)return d.results.map(p=>({url:p.urls.regular,thumb:p.urls.small,title:p.alt_description||query,tags:(p.tags||[]).map(t=>t.title).slice(0,5)}));
+}catch(e){}
+}
+const kws=[query,query+’ fashion’,query+’ style’,query+’ outfit’,query+’ look’,query+’ ootd’,query+’ clothing’,query+’ trendy’,query+’ streetstyle’,query+’ apparel’];
+const dims=[[400,550],[380,560],[420,540],[410,580],[390,520],[430,570],[415,560],[395,590],[425,530],[440,610]];
+const t=Date.now()%999;
+return kws.map((kw,i)=>({url:`https://source.unsplash.com/${dims[i][0]}x${dims[i][1]}/?${encodeURIComponent(kw)}&sig=${i+t}`,thumb:`https://source.unsplash.com/${dims[i][0]}x${dims[i][1]}/?${encodeURIComponent(kw)}&sig=${i+t}`,title:kw,tags:kw.toLowerCase().split(/\s+/)}));
+}
+
+function exTags(text){
+return[‘casual’,‘sport’,‘classic’,‘boho’,‘smart’,‘winter’,‘summer’,‘spring’,‘fall’,‘dress’,‘jeans’,‘blazer’,‘coat’,‘sweater’,‘skirt’,‘top’,‘shoes’].filter(w=>text.toLowerCase().includes(w));
+}
+
+function galScore(img){
+if(!gallery.length)return 0;
+const kw=[…new Set(gallery.flatMap(g=>(g.album||’’).toLowerCase().split(/\s+/)))];
+const txt=(img.title+’ ‘+(img.tags||[]).join(’ ’)).toLowerCase();
+return kw.filter(k=>k.length>2&&txt.includes(k)).length;
+}
+
+function renderPins(){
+const pg=document.getElementById(‘pgrid’);
+document.getElementById(‘empty’).style.display=pinResults.length?‘none’:‘flex’;
+pg.innerHTML=’’;
+pinResults.forEach(img=>{
+const star=galScore(img)>0&&gallery.length>0;
+const c=document.createElement(‘div’);c.className=‘pcard’;
+c.innerHTML=`<img src="${img.thumb||img.url}" alt="${img.title}" loading="lazy" onerror="this.style.height='160px';this.style.background='#2a2a2a'"/> <div class="pov"><span class="ptitle">${img.title.split('|')[0].trim()}</span></div> ${star?'<div class="pstar" title="Gardrobunuzla uyumlu!">⭐</div>':''}`;
+c.onclick=()=>showModal(`<img src="${img.url}" style="margin-bottom:10px" onerror="this.style.display='none'"/><p style="font-size:.75rem;color:var(--mu)">${img.title}</p><div class="mdb" style="margin-top:10px"><button class="cc" onclick="closeModal()">Kapat</button></div>`);
+pg.appendChild(c);
+});
+pg.className=`pgrid c${grid}`;
+}
+
+async function loadGallery(){
+const{db,collection,getDocs}=window._fb;
+try{
+const snap=await getDocs(collection(db,‘users’,userId,‘gallery’));
+gallery=[];snap.forEach(d=>gallery.push({id:d.id,…d.data()}));
+}catch(e){}
+renderGallery();renderAlbumUI();
+}
+
+function renderGallery(){
+const gg=document.getElementById(‘gg’);gg.innerHTML=’’;
+const list=curAlbum?gallery.filter(g=>g.album===curAlbum):gallery;
+list.forEach(item=>{
+const d=document.createElement(‘div’);d.className=‘gi’;
+d.innerHTML=`<img src="${item.url}" alt="${item.album}" loading="lazy" onerror="this.style.display='none'"/> <div class="gi-alb">${item.album}</div> <button class="gd" onclick="delGal('${item.id}',event)">✕</button>`;
+d.onclick=e=>{if(!e.target.classList.contains(‘gd’))showModal(`<img src="${item.url}" onerror="this.style.display='none'"/><div class="mdb" style="margin-top:10px"><button class="cc" onclick="closeModal()">Kapat</button></div>`);};
+gg.appendChild(d);
+});
+document.getElementById(‘ulim’).textContent=`${gallery.length} / 50 fotoğraf`;
+}
+
+function renderAlbumUI(){
+const sel=document.getElementById(‘alb-sel’),tabs=document.getElementById(‘atabs’);
+sel.innerHTML=’<option value="">Tüm Kıyafetler</option>’;
+tabs.innerHTML=`<div class="ach on" onclick="filterAlbum(this,'')">Tümü (${gallery.length})</div>`;
+albums.forEach(a=>{
+const o=document.createElement(‘option’);o.value=a;o.textContent=a;sel.appendChild(o);
+const cnt=gallery.filter(g=>g.album===a).length;
+const ch=document.createElement(‘div’);ch.className=‘ach’;ch.textContent=`${a} (${cnt})`;
+ch.onclick=()=>filterAlbum(ch,a);tabs.appendChild(ch);
+});
+}
+
+function filterAlbum(el,album){
+curAlbum=album;
+document.querySelectorAll(’.ach’).forEach(c=>c.classList.remove(‘on’));
+el.classList.add(‘on’);renderGallery();
+}
+
+function openUpload(){
+if(gallery.length>=50){toast(‘50 fotoğraf sınırına ulaştınız’);return;}
+showModal(`<h3>📷 Fotoğraf Ekle</h3> <select id="up-alb">${albums.map(a=>`<option value="${a}">${a}</option>`).join('')}</select> <div class="uz" onclick="document.getElementById('fi').click()"> <div class="ui">📁</div><p>Tıklayarak seç</p> <p style="font-size:.7rem;margin-top:3px;color:#555">Otomatik sıkıştırılır</p> </div> <input type="file" id="fi" accept="image/*" multiple style="display:none" onchange="handleUpload(event)"/> <div class="mdb"><button class="cc" onclick="closeModal()">İptal</button></div>`);
+}
+
+async function handleUpload(e){
+const files=Array.from(e.target.files);
+const album=document.getElementById(‘up-alb’)?.value||albums[0];
+closeModal();let added=0;
+for(const file of files){
+if(gallery.length>=50)break;
+try{
+const blob=await compressImage(file,800,.72);
+const{storage,ref,uploadBytes,getDownloadURL,db,collection,addDoc}=window._fb;
+const sRef=ref(storage,`users/${userId}/gallery/${Date.now()}_${file.name}`);
+await uploadBytes(sRef,blob);
+const url=await getDownloadURL(sRef);
+const docRef=await addDoc(collection(db,‘users’,userId,‘gallery’),{url,album,name:file.name,createdAt:Date.now()});
+gallery.push({id:docRef.id,url,album,name:file.name});added++;
+}catch(err){toast(’Yükleme hatası: ’+err.message);}
+}
+renderGallery();renderAlbumUI();
+if(added)toast(`${added} fotoğraf yüklendi ✓`);
+}
+
+async function compressImage(file,maxW,q){
+return new Promise(res=>{
+const img=new Image(),url=URL.createObjectURL(file);
+img.onload=()=>{
+const s=Math.min(1,maxW/img.width);
+const c=document.createElement(‘canvas’);
+c.width=img.width*s;c.height=img.height*s;
+c.getContext(‘2d’).drawImage(img,0,0,c.width,c.height);
+c.toBlob(b=>res(b),‘image/jpeg’,q);URL.revokeObjectURL(url);
+};img.src=url;
+});
+}
+
+async function delGal(id,e){
+e.stopPropagation();if(!confirm(‘Bu fotoğrafı sil?’))return;
+const{db,deleteDoc,doc}=window._fb;
+try{
+await deleteDoc(doc(db,‘users’,userId,‘gallery’,id));
+gallery=gallery.filter(g=>g.id!==id);
+renderGallery();renderAlbumUI();toast(‘Silindi’);
+}catch(e){toast(‘Silme hatası’);}
+}
+
+function openAlbumModal(){
+showModal(`<h3>🗂 Yeni Albüm</h3> <input id="an" placeholder="Albüm adı…" onkeydown="if(event.key==='Enter')addAlbum()"/> <div class="mdb"> <button class="ok" onclick="addAlbum()">Oluştur</button> <button class="cc" onclick="closeModal()">İptal</button> </div>`);
+setTimeout(()=>document.getElementById(‘an’)?.focus(),50);
+}
+
+function addAlbum(){
+const name=document.getElementById(‘an’)?.value.trim();if(!name)return;
+if(!albums.includes(name))albums.push(name);
+renderAlbumUI();toast(‘Albüm oluşturuldu’);closeModal();
+}
+
+function showModal(html){
+document.getElementById(‘mw’).innerHTML=`<div class="ov" onclick="if(event.target.classList.contains('ov'))closeModal()"><div class="md">${html}</div></div>`;
+}
+function closeModal(){document.getElementById(‘mw’).innerHTML=’’;}
+
+function toast(msg){
+const el=document.createElement(‘div’);el.className=‘toast’;el.textContent=msg;
+document.body.appendChild(el);setTimeout(()=>el.remove(),2800);
+}
+
+document.getElementById(‘q’).addEventListener(‘keydown’,e=>{
+if(e.key===‘Enter’&&!e.shiftKey){e.preventDefault();doSearch();}
+});
+
+window.addEventListener(‘DOMContentLoaded’,init);
+</script>
+
+</body>
+</html>
