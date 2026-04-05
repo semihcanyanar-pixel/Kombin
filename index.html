@@ -209,19 +209,22 @@ let grid=3,filters={style:null,gender:null,season:null};
 let gallery=[],albums=['Günlük','Spor','İş','Özel Gün'],curAlbum='',pinResults=[];
 
 async function init(){
-const{auth,signInAnonymously,onAuthStateChanged,remoteConfig,fetchAndActivate,getValue}=window._fb;
-try{await signInAnonymously(auth);}catch(e){hideLoading();return;}
+const{auth,signInAnonymously,onAuthStateChanged,remoteConfig,fetchAndActivate,getValue}=window.*fb;
+try{await signInAnonymously(auth);}catch(e){console.warn(‘Auth error’,e);hideLoading();return;}
 onAuthStateChanged(auth,async user=>{
-if(!user)return;
+if(!user){hideLoading();return;}
 userId=user.uid;
 try{
-await fetchAndActivate(remoteConfig);
+await Promise.race([
+fetchAndActivate(remoteConfig),
+new Promise((*,r)=>setTimeout(()=>r(new Error(‘timeout’)),5000))
+]);
 claudeKey=getValue(remoteConfig,‘claude_api_key’).asString();
 googleKey=getValue(remoteConfig,‘google_api_key’).asString();
 googleCx=getValue(remoteConfig,‘google_cx’).asString();
 unsplashKey=getValue(remoteConfig,‘unsplash_access_key’).asString();
-}catch(e){}
-await loadGallery();
+}catch(e){console.warn(‘Remote config unavailable, continuing without API keys’,e);}
+try{await loadGallery();}catch(e){console.warn(‘Gallery load error’,e);}
 hideLoading();
 });
 }
