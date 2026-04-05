@@ -7,40 +7,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Kombin"/>
-<link rel="manifest" href="manifest.json"/>
 <title>Kombin – Stil Asistanın</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-  import { getRemoteConfig, fetchAndActivate, getValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-remote-config.js";
-  const firebaseConfig = {
-    apiKey:"AIzaSyA8nrpyo6qdVDzeMg8E2p5GZxqrFjFgGfU",
-    authDomain:"kombin-d1288.firebaseapp.com",
-    projectId:"kombin-d1288",
-    storageBucket:"kombin-d1288.firebasestorage.app",
-    messagingSenderId:"685494136121",
-    appId:"1:685494136121:web:83cb5517f59d6ec9010ce8"
-  };
-  const app=initializeApp(firebaseConfig);
-  const auth=getAuth(app),db=getFirestore(app),storage=getStorage(app);
-  const remoteConfig=getRemoteConfig(app);
-  remoteConfig.settings.minimumFetchIntervalMillis=3600000;
-  window._fb={auth,db,storage,remoteConfig,signInAnonymously,onAuthStateChanged,
-    collection,addDoc,getDocs,deleteDoc,doc,ref,uploadBytes,getDownloadURL,fetchAndActivate,getValue};
-</script>
 <style>
 :root{--bg:#111;--sf:#1c1c1c;--bd:#2c2c2c;--tx:#e8e8e8;--mu:#777;--ac:#e60023;--wh:#fff;--gap:10px;--rad:16px;--pw:272px}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden;background:var(--bg)}
 body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:antialiased}
-#ls{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s}
-#ls .ll{font-size:2.4rem;font-weight:700;color:var(--ac);animation:pu 1.6s ease-in-out infinite}
-#ls p{color:var(--mu);font-size:.82rem;margin-top:8px}
-@keyframes pu{0%,100%{opacity:1}50%{opacity:.35}}
 .shell{display:flex;height:100vh;width:100vw}
 .lp{width:var(--pw);min-width:var(--pw);background:var(--sf);border-right:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;transition:transform .28s cubic-bezier(.4,0,.2,1)}
 .lpb{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:70px}
@@ -51,7 +25,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
 .sb{padding:13px 13px 9px;border-bottom:1px solid var(--bd)}
 .sb textarea{width:100%;background:#252525;border:1px solid #333;border-radius:22px;padding:9px 15px;font-family:'DM Sans';font-size:.8rem;color:var(--tx);resize:none;outline:none;min-height:60px;line-height:1.45;transition:border-color .2s}
 .sb textarea::placeholder{color:var(--mu)}.sb textarea:focus{border-color:#555}
-.sgo{margin-top:7px;width:100%;background:var(--ac);color:#wh;border:none;border-radius:22px;padding:9px 0;font-size:.8rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .18s;color:#fff}
+.sgo{margin-top:7px;width:100%;background:var(--ac);color:#fff;border:none;border-radius:22px;padding:9px 0;font-size:.8rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .18s}
 .sgo:hover{opacity:.87}
 .spin{width:12px;height:12px;border:2px solid #fff3;border-top-color:#fff;border-radius:50%;animation:spin .65s linear infinite;display:none}
 .sgo.ld .spin{display:block}
@@ -94,7 +68,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
 .ach{padding:4px 12px;border-radius:18px;border:1px solid var(--bd);background:#252525;font-size:.72rem;color:var(--mu);cursor:pointer;transition:all .15s}
 .ach.on{background:var(--wh);color:#111;border-color:var(--wh);font-weight:700}
 .ulim{font-size:.7rem;color:var(--mu);margin-bottom:7px}
-.gg{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap)}
+.gg{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)}
 .gi{border-radius:11px;overflow:hidden;background:#2a2a2a;position:relative;cursor:pointer;aspect-ratio:3/4;transition:transform .17s}
 .gi:hover{transform:scale(1.025)}.gi img{width:100%;height:100%;object-fit:cover;display:block}
 .gi-alb{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.75));padding:18px 7px 6px;font-size:.65rem;color:#ccc}
@@ -126,8 +100,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
 </style>
 </head>
 <body>
-<div id="ls"><div class="ll">Kombin</div><p>Hazırlanıyor…</p></div>
-<div class="shell" id="app" style="display:none">
+<div class="shell">
   <div class="lp" id="sidebar">
     <div class="logo">
       <div class="logo-i">👗</div>
@@ -203,315 +176,310 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
 <button id="mfab" onclick="toggleSide()">☰</button>
 <div id="mbk" onclick="toggleSide()"></div>
 <div id="mw"></div>
+
 <script>
-let userId=null,claudeKey='',googleKey='',googleCx='',unsplashKey='';
-let grid=3,filters={style:null,gender:null,season:null};
-let gallery=[],albums=['Günlük','Spor','İş','Özel Gün'],curAlbum='',pinResults=[];
+// ── API KEYS (Firebase Remote Config yerine buraya girildi) ──
+const CLAUDE_KEY   = '';  // console.anthropic.com dan alın
+const GOOGLE_KEY   = '';  // Google Custom Search API key
+const GOOGLE_CX    = '';  // Google Custom Search CX
+const UNSPLASH_KEY = '';  // Opsiyonel
 
-async function init(){
-const{auth,signInAnonymously,onAuthStateChanged,remoteConfig,fetchAndActivate,getValue}=window.*fb;
-try{await signInAnonymously(auth);}catch(e){console.warn(‘Auth error’,e);hideLoading();return;}
-onAuthStateChanged(auth,async user=>{
-if(!user){hideLoading();return;}
-userId=user.uid;
-try{
-await Promise.race([
-fetchAndActivate(remoteConfig),
-new Promise((*,r)=>setTimeout(()=>r(new Error(‘timeout’)),5000))
-]);
-claudeKey=getValue(remoteConfig,‘claude_api_key’).asString();
-googleKey=getValue(remoteConfig,‘google_api_key’).asString();
-googleCx=getValue(remoteConfig,‘google_cx’).asString();
-unsplashKey=getValue(remoteConfig,‘unsplash_access_key’).asString();
-}catch(e){console.warn(‘Remote config unavailable, continuing without API keys’,e);}
-try{await loadGallery();}catch(e){console.warn(‘Gallery load error’,e);}
-hideLoading();
-});
+// ── STATE ──
+let grid=3, filters={style:null,gender:null,season:null};
+let gallery=[], albums=['Günlük','Spor','İş','Özel Gün'], curAlbum='', pinResults=[];
+
+// localStorage'dan galeriyi yükle
+function loadGalleryLocal(){
+  try{ gallery=JSON.parse(localStorage.getItem('kombin_gallery')||'[]'); }catch(e){ gallery=[]; }
+  renderGallery(); renderAlbumUI();
+}
+function saveGalleryLocal(){
+  try{ localStorage.setItem('kombin_gallery', JSON.stringify(gallery)); }catch(e){}
 }
 
-function hideLoading(){
-const ls=document.getElementById(‘ls’);
-ls.style.opacity=‘0’;
-setTimeout(()=>{ls.style.display=‘none’;document.getElementById(‘app’).style.display=‘flex’;},400);
-}
-
-[‘cs’,‘cg’,‘cm’].forEach(id=>{
-document.getElementById(id).addEventListener(‘click’,e=>{
-const chip=e.target.closest(’.chip’);if(!chip)return;
-const was=chip.classList.contains(‘on’);
-document.getElementById(id).querySelectorAll(’.chip’).forEach(c=>c.classList.remove(‘on’));
-if(!was)chip.classList.add(‘on’);
-const key=id===‘cs’?‘style’:id===‘cg’?‘gender’:‘season’;
-filters[key]=was?null:chip.dataset.v;
-renderPills();
-});
+// ── CHIP SEÇİMİ ──
+['cs','cg','cm'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{
+    const chip=e.target.closest('.chip'); if(!chip)return;
+    const was=chip.classList.contains('on');
+    document.getElementById(id).querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+    if(!was) chip.classList.add('on');
+    const key=id==='cs'?'style':id==='cg'?'gender':'season';
+    filters[key]=was?null:chip.dataset.v;
+    renderPills();
+  });
 });
 
 function renderPills(){
-const w=document.getElementById(‘pills’);w.innerHTML=’’;
-const map={style:filters.style,gender:filters.gender,season:filters.season};
-Object.entries(map).forEach(([k,v])=>{
-if(!v)return;
-const d=document.createElement(‘div’);d.className=‘pill’;
-d.innerHTML=`${v} <button onclick="clearFilter('${k}')">✕</button>`;
-w.appendChild(d);
-});
+  const w=document.getElementById('pills'); w.innerHTML='';
+  Object.entries({style:filters.style,gender:filters.gender,season:filters.season}).forEach(([k,v])=>{
+    if(!v)return;
+    const d=document.createElement('div'); d.className='pill';
+    d.innerHTML=`${v} <button onclick="clearFilter('${k}')">✕</button>`;
+    w.appendChild(d);
+  });
 }
-
 function clearFilter(key){
-filters[key]=null;
-const id=key===‘style’?‘cs’:key===‘gender’?‘cg’:‘cm’;
-document.getElementById(id).querySelectorAll(’.chip’).forEach(c=>c.classList.remove(‘on’));
-renderPills();
+  filters[key]=null;
+  const id=key==='style'?'cs':key==='gender'?'cg':'cm';
+  document.getElementById(id).querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  renderPills();
 }
 
 function setGrid(n){
-grid=n;
-document.getElementById(‘gp’).querySelectorAll(‘button’).forEach((b,i)=>b.classList.toggle(‘on’,i+1===n));
-document.getElementById(‘pgrid’).className=`pgrid c${n}`;
+  grid=n;
+  document.getElementById('gp').querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on',i+1===n));
+  document.getElementById('pgrid').className=`pgrid c${n}`;
 }
-
 function switchTab(name,btn){
-document.querySelectorAll(’.panel’).forEach(p=>p.classList.remove(‘on’));
-document.querySelectorAll(’.ntab’).forEach(b=>b.classList.remove(‘on’));
-document.getElementById(‘tab-’+name).classList.add(‘on’);
-btn.classList.add(‘on’);
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.ntab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('tab-'+name).classList.add('on');
+  btn.classList.add('on');
 }
-
 function toggleSide(){
-document.getElementById(‘sidebar’).classList.toggle(‘open’);
-document.getElementById(‘mbk’).classList.toggle(‘open’);
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('mbk').classList.toggle('open');
 }
-
 function setLoading(on){
-document.getElementById(‘sgo’).classList.toggle(‘ld’,on);
-document.getElementById(‘slbl’).textContent=on?‘Aranıyor…’:‘🔍 AI ile Ara’;
+  document.getElementById('sgo').classList.toggle('ld',on);
+  document.getElementById('slbl').textContent=on?'Aranıyor…':'🔍 AI ile Ara';
 }
 
+// ── ARAMA ──
 async function doSearch(){
-const q=document.getElementById(‘q’).value.trim();
-if(!q){toast(‘Lütfen bir arama yazın’);return;}
-setLoading(true);
-try{
-const r=await refineWithClaude(q);
-await fetchImages(r);
-document.querySelectorAll(’.panel’).forEach(p=>p.classList.remove(‘on’));
-document.getElementById(‘tab-discover’).classList.add(‘on’);
-document.querySelectorAll(’.ntab’).forEach((b,i)=>b.classList.toggle(‘on’,i===0));
-if(window.innerWidth<740)toggleSide();
-}catch(e){toast(’Hata: ’+e.message);}
-finally{setLoading(false);}
+  const q=document.getElementById('q').value.trim();
+  if(!q){toast('Lütfen bir arama yazın');return;}
+  setLoading(true);
+  try{
+    const r=await refineQuery(q);
+    await fetchImages(r);
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+    document.getElementById('tab-discover').classList.add('on');
+    document.querySelectorAll('.ntab').forEach((b,i)=>b.classList.toggle('on',i===0));
+    if(window.innerWidth<740)toggleSide();
+  }catch(e){toast('Hata: '+e.message);}
+  finally{setLoading(false);}
 }
 
 async function applyFilters(){
-if(!filters.style&&!filters.gender&&!filters.season){toast(‘En az bir filtre seçin’);return;}
-const q=[filters.gender,filters.season,filters.style,‘kombin’].filter(Boolean).join(’ ‘);
-setLoading(true);
-try{
-const r=await refineWithClaude(q);
-await fetchImages(r);
-document.querySelectorAll(’.panel’).forEach(p=>p.classList.remove(‘on’));
-document.getElementById(‘tab-discover’).classList.add(‘on’);
-document.querySelectorAll(’.ntab’).forEach((b,i)=>b.classList.toggle(‘on’,i===0));
-if(window.innerWidth<740)toggleSide();
-}catch(e){toast(’Hata: ’+e.message);}
-finally{setLoading(false);}
+  if(!filters.style&&!filters.gender&&!filters.season){toast('En az bir filtre seçin');return;}
+  const q=[filters.gender,filters.season,filters.style,'kombin'].filter(Boolean).join(' ');
+  setLoading(true);
+  try{
+    const r=await refineQuery(q);
+    await fetchImages(r);
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+    document.getElementById('tab-discover').classList.add('on');
+    document.querySelectorAll('.ntab').forEach((b,i)=>b.classList.toggle('on',i===0));
+    if(window.innerWidth<740)toggleSide();
+  }catch(e){toast('Hata: '+e.message);}
+  finally{setLoading(false);}
 }
 
-async function refineWithClaude(q){
-if(!claudeKey){
-const map={‘kadın’:‘women’,‘erkek’:‘men’,‘kız çocuk’:‘girls’,‘erkek çocuk’:‘boys’,‘spor’:‘sporty athletic’,‘casual’:‘casual’,‘smart casual’:‘smart casual’,‘klasik’:‘classic formal’,‘boho’:‘bohemian’,‘kış’:‘winter’,‘yaz’:‘summer’,‘ilkbahar’:‘spring’,‘sonbahar’:‘fall’,‘kombin’:‘outfit look’};
-let r=q.toLowerCase();
-Object.entries(map).forEach(([tr,en])=>{r=r.replace(tr,en);});
-return r+’ fashion style’;
-}
-const resp=await fetch(‘https://api.anthropic.com/v1/messages’,{
-method:‘POST’,
-headers:{‘x-api-key’:claudeKey,‘anthropic-version’:‘2023-06-01’,‘content-type’:‘application/json’},
-body:JSON.stringify({model:‘claude-sonnet-4-20250514’,max_tokens:60,
-system:‘Convert Turkish fashion queries to English image search terms (4-7 words). Return ONLY the query.’,
-messages:[{role:‘user’,content:q}]})
-});
-const d=await resp.json();
-return d.content?.[0]?.text?.trim()||q+’ outfit’;
+async function refineQuery(q){
+  if(!CLAUDE_KEY){
+    const map={'kadın':'women','erkek':'men','kız çocuk':'girls','erkek çocuk':'boys',
+      'spor':'sporty','casual':'casual','smart casual':'smart casual',
+      'klasik':'classic','boho':'bohemian','kış':'winter','yaz':'summer',
+      'ilkbahar':'spring','sonbahar':'fall','kombin':'outfit'};
+    let r=q.toLowerCase();
+    Object.entries(map).forEach(([tr,en])=>{r=r.replace(new RegExp(tr,'g'),en);});
+    return r+' fashion look';
+  }
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'x-api-key':CLAUDE_KEY,'anthropic-version':'2023-06-01','content-type':'application/json'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:40,
+        system:'Convert Turkish fashion query to English search keywords (4-6 words). Return ONLY the keywords.',
+        messages:[{role:'user',content:q}]})
+    });
+    const d=await resp.json();
+    return d.content?.[0]?.text?.trim()||q+' outfit';
+  }catch(e){return q+' fashion outfit';}
 }
 
 async function fetchImages(query){
-const[gI,uI]=await Promise.all([fetchGoogle(query),fetchUnsplash(query)]);
-const merged=[];let gi=0,ui=0;
-while(merged.length<30){
-if(gi<gI.length&&merged.length%3<2)merged.push(gI[gi++]);
-else if(ui<uI.length)merged.push(uI[ui++]);
-else if(gi<gI.length)merged.push(gI[gi++]);
-else break;
-}
-const scored=merged.map(img=>({img,s:galScore(img)}));
-scored.sort((a,b)=>b.s-a.s);
-pinResults=scored.map(x=>x.img);
-renderPins();
+  const[gI,uI]=await Promise.all([fetchGoogle(query),fetchUnsplash(query)]);
+  const merged=[];let gi=0,ui=0;
+  while(merged.length<28){
+    if(gi<gI.length&&merged.length%3<2)merged.push(gI[gi++]);
+    else if(ui<uI.length)merged.push(uI[ui++]);
+    else if(gi<gI.length)merged.push(gI[gi++]);
+    else break;
+  }
+  const scored=merged.map(img=>({img,s:galScore(img)}));
+  scored.sort((a,b)=>b.s-a.s);
+  pinResults=scored.map(x=>x.img);
+  renderPins();
 }
 
 async function fetchGoogle(query){
-if(!googleKey||!googleCx)return[];
-try{
-const url=`https://www.googleapis.com/customsearch/v1?key=${googleKey}&cx=${googleCx}&q=${encodeURIComponent(query+' outfit fashion')}&searchType=image&num=10&imgSize=large&imgType=photo&safe=active`;
-const d=await(await fetch(url)).json();
-return(d.items||[]).map(item=>({url:item.link,thumb:item.image?.thumbnailLink||item.link,title:item.title||query,tags:exTags(item.title||’’)}));
-}catch(e){return[];}
+  if(!GOOGLE_KEY||!GOOGLE_CX)return[];
+  try{
+    const url=`https://www.googleapis.com/customsearch/v1?key=${GOOGLE_KEY}&cx=${GOOGLE_CX}&q=${encodeURIComponent(query+' outfit')}&searchType=image&num=10&imgSize=large&safe=active`;
+    const d=await(await fetch(url)).json();
+    return(d.items||[]).map(item=>({url:item.link,thumb:item.image?.thumbnailLink||item.link,title:item.title||query,tags:[]}));
+  }catch(e){return[];}
 }
 
 async function fetchUnsplash(query){
-if(unsplashKey){
-try{
-const url=`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=15&orientation=portrait&client_id=${unsplashKey}`;
-const d=await(await fetch(url)).json();
-if(d.results?.length)return d.results.map(p=>({url:p.urls.regular,thumb:p.urls.small,title:p.alt_description||query,tags:(p.tags||[]).map(t=>t.title).slice(0,5)}));
-}catch(e){}
-}
-const kws=[query,query+’ fashion’,query+’ style’,query+’ outfit’,query+’ look’,query+’ ootd’,query+’ clothing’,query+’ trendy’,query+’ streetstyle’,query+’ apparel’];
-const dims=[[400,550],[380,560],[420,540],[410,580],[390,520],[430,570],[415,560],[395,590],[425,530],[440,610]];
-const t=Date.now()%999;
-return kws.map((kw,i)=>({url:`https://source.unsplash.com/${dims[i][0]}x${dims[i][1]}/?${encodeURIComponent(kw)}&sig=${i+t}`,thumb:`https://source.unsplash.com/${dims[i][0]}x${dims[i][1]}/?${encodeURIComponent(kw)}&sig=${i+t}`,title:kw,tags:kw.toLowerCase().split(/\s+/)}));
-}
-
-function exTags(text){
-return[‘casual’,‘sport’,‘classic’,‘boho’,‘smart’,‘winter’,‘summer’,‘spring’,‘fall’,‘dress’,‘jeans’,‘blazer’,‘coat’,‘sweater’,‘skirt’,‘top’,‘shoes’].filter(w=>text.toLowerCase().includes(w));
+  if(UNSPLASH_KEY){
+    try{
+      const d=await(await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=15&orientation=portrait&client_id=${UNSPLASH_KEY}`)).json();
+      if(d.results?.length)return d.results.map(p=>({url:p.urls.regular,thumb:p.urls.small,title:p.alt_description||query,tags:(p.tags||[]).map(t=>t.title)}));
+    }catch(e){}
+  }
+  const kws=[query,query+' fashion',query+' style',query+' outfit',query+' look',query+' ootd',query+' clothing',query+' trendy',query+' streetstyle',query+' apparel'];
+  const dims=[[400,550],[380,560],[420,540],[410,580],[390,520],[430,570],[415,560],[395,590],[425,530],[440,610]];
+  const t=Date.now()%9999;
+  return kws.map((kw,i)=>({
+    url:`https://source.unsplash.com/${dims[i][0]}x${dims[i][1]}/?${encodeURIComponent(kw)}&sig=${i+t}`,
+    thumb:`https://source.unsplash.com/${dims[i][0]}x${dims[i][1]}/?${encodeURIComponent(kw)}&sig=${i+t}`,
+    title:kw,tags:kw.split(' ')
+  }));
 }
 
 function galScore(img){
-if(!gallery.length)return 0;
-const kw=[…new Set(gallery.flatMap(g=>(g.album||’’).toLowerCase().split(/\s+/)))];
-const txt=(img.title+’ ‘+(img.tags||[]).join(’ ’)).toLowerCase();
-return kw.filter(k=>k.length>2&&txt.includes(k)).length;
+  if(!gallery.length)return 0;
+  const kw=[...new Set(gallery.flatMap(g=>(g.album||'').toLowerCase().split(/\s+/)))];
+  const txt=(img.title+' '+(img.tags||[]).join(' ')).toLowerCase();
+  return kw.filter(k=>k.length>2&&txt.includes(k)).length;
 }
 
 function renderPins(){
-const pg=document.getElementById(‘pgrid’);
-document.getElementById(‘empty’).style.display=pinResults.length?‘none’:‘flex’;
-pg.innerHTML=’’;
-pinResults.forEach(img=>{
-const star=galScore(img)>0&&gallery.length>0;
-const c=document.createElement(‘div’);c.className=‘pcard’;
-c.innerHTML=`<img src="${img.thumb||img.url}" alt="${img.title}" loading="lazy" onerror="this.style.height='160px';this.style.background='#2a2a2a'"/> <div class="pov"><span class="ptitle">${img.title.split('|')[0].trim()}</span></div> ${star?'<div class="pstar" title="Gardrobunuzla uyumlu!">⭐</div>':''}`;
-c.onclick=()=>showModal(`<img src="${img.url}" style="margin-bottom:10px" onerror="this.style.display='none'"/><p style="font-size:.75rem;color:var(--mu)">${img.title}</p><div class="mdb" style="margin-top:10px"><button class="cc" onclick="closeModal()">Kapat</button></div>`);
-pg.appendChild(c);
-});
-pg.className=`pgrid c${grid}`;
+  const pg=document.getElementById('pgrid');
+  document.getElementById('empty').style.display=pinResults.length?'none':'flex';
+  pg.innerHTML='';
+  pinResults.forEach(img=>{
+    const star=galScore(img)>0&&gallery.length>0;
+    const c=document.createElement('div'); c.className='pcard';
+    c.innerHTML=`
+      <img src="${img.thumb||img.url}" alt="${img.title}" loading="lazy"
+        onerror="this.style.height='180px';this.style.background='#2a2a2a'"/>
+      <div class="pov"><span class="ptitle">${img.title.split('|')[0].trim()}</span></div>
+      ${star?'<div class="pstar" title="Gardrobunuzla uyumlu!">⭐</div>':''}`;
+    c.onclick=()=>showModal(`
+      <img src="${img.url}" style="margin-bottom:10px" onerror="this.style.display='none'"/>
+      <div class="mdb" style="margin-top:10px"><button class="cc" onclick="closeModal()">Kapat</button></div>`);
+    pg.appendChild(c);
+  });
+  pg.className=`pgrid c${grid}`;
 }
 
-async function loadGallery(){
-const{db,collection,getDocs}=window._fb;
-try{
-const snap=await getDocs(collection(db,‘users’,userId,‘gallery’));
-gallery=[];snap.forEach(d=>gallery.push({id:d.id,…d.data()}));
-}catch(e){}
-renderGallery();renderAlbumUI();
-}
-
+// ── GALERİ ──
 function renderGallery(){
-const gg=document.getElementById(‘gg’);gg.innerHTML=’’;
-const list=curAlbum?gallery.filter(g=>g.album===curAlbum):gallery;
-list.forEach(item=>{
-const d=document.createElement(‘div’);d.className=‘gi’;
-d.innerHTML=`<img src="${item.url}" alt="${item.album}" loading="lazy" onerror="this.style.display='none'"/> <div class="gi-alb">${item.album}</div> <button class="gd" onclick="delGal('${item.id}',event)">✕</button>`;
-d.onclick=e=>{if(!e.target.classList.contains(‘gd’))showModal(`<img src="${item.url}" onerror="this.style.display='none'"/><div class="mdb" style="margin-top:10px"><button class="cc" onclick="closeModal()">Kapat</button></div>`);};
-gg.appendChild(d);
-});
-document.getElementById(‘ulim’).textContent=`${gallery.length} / 50 fotoğraf`;
+  const gg=document.getElementById('gg'); gg.innerHTML='';
+  const list=curAlbum?gallery.filter(g=>g.album===curAlbum):gallery;
+  list.forEach(item=>{
+    const d=document.createElement('div'); d.className='gi';
+    d.innerHTML=`
+      <img src="${item.url}" alt="${item.album}" loading="lazy" onerror="this.style.display='none'"/>
+      <div class="gi-alb">${item.album}</div>
+      <button class="gd" onclick="delItem('${item.id}',event)">✕</button>`;
+    d.onclick=e=>{if(!e.target.classList.contains('gd'))showModal(`
+      <img src="${item.url}" onerror="this.style.display='none'"/>
+      <div class="mdb" style="margin-top:10px"><button class="cc" onclick="closeModal()">Kapat</button></div>`);};
+    gg.appendChild(d);
+  });
+  document.getElementById('ulim').textContent=`${gallery.length} / 50 fotoğraf`;
 }
 
 function renderAlbumUI(){
-const sel=document.getElementById(‘alb-sel’),tabs=document.getElementById(‘atabs’);
-sel.innerHTML=’<option value="">Tüm Kıyafetler</option>’;
-tabs.innerHTML=`<div class="ach on" onclick="filterAlbum(this,'')">Tümü (${gallery.length})</div>`;
-albums.forEach(a=>{
-const o=document.createElement(‘option’);o.value=a;o.textContent=a;sel.appendChild(o);
-const cnt=gallery.filter(g=>g.album===a).length;
-const ch=document.createElement(‘div’);ch.className=‘ach’;ch.textContent=`${a} (${cnt})`;
-ch.onclick=()=>filterAlbum(ch,a);tabs.appendChild(ch);
-});
+  const sel=document.getElementById('alb-sel'), tabs=document.getElementById('atabs');
+  sel.innerHTML='<option value="">Tüm Kıyafetler</option>';
+  tabs.innerHTML=`<div class="ach on" onclick="filterAlbum(this,'')">Tümü (${gallery.length})</div>`;
+  albums.forEach(a=>{
+    const o=document.createElement('option'); o.value=a; o.textContent=a; sel.appendChild(o);
+    const cnt=gallery.filter(g=>g.album===a).length;
+    const ch=document.createElement('div'); ch.className='ach';
+    ch.textContent=`${a} (${cnt})`; ch.onclick=()=>filterAlbum(ch,a); tabs.appendChild(ch);
+  });
 }
 
 function filterAlbum(el,album){
-curAlbum=album;
-document.querySelectorAll(’.ach’).forEach(c=>c.classList.remove(‘on’));
-el.classList.add(‘on’);renderGallery();
+  curAlbum=album;
+  document.querySelectorAll('.ach').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on'); renderGallery();
 }
 
 function openUpload(){
-if(gallery.length>=50){toast(‘50 fotoğraf sınırına ulaştınız’);return;}
-showModal(`<h3>📷 Fotoğraf Ekle</h3> <select id="up-alb">${albums.map(a=>`<option value="${a}">${a}</option>`).join('')}</select> <div class="uz" onclick="document.getElementById('fi').click()"> <div class="ui">📁</div><p>Tıklayarak seç</p> <p style="font-size:.7rem;margin-top:3px;color:#555">Otomatik sıkıştırılır</p> </div> <input type="file" id="fi" accept="image/*" multiple style="display:none" onchange="handleUpload(event)"/> <div class="mdb"><button class="cc" onclick="closeModal()">İptal</button></div>`);
+  if(gallery.length>=50){toast('50 fotoğraf sınırına ulaştınız');return;}
+  showModal(`<h3>📷 Fotoğraf Ekle</h3>
+    <select id="up-alb">${albums.map(a=>`<option value="${a}">${a}</option>`).join('')}</select>
+    <div class="uz" onclick="document.getElementById('fi').click()">
+      <div class="ui">📁</div><p>Tıklayarak seç</p>
+      <p style="font-size:.7rem;margin-top:3px;color:#555">Otomatik sıkıştırılır</p>
+    </div>
+    <input type="file" id="fi" accept="image/*" multiple style="display:none" onchange="handleUpload(event)"/>
+    <div class="mdb"><button class="cc" onclick="closeModal()">İptal</button></div>`);
 }
 
 async function handleUpload(e){
-const files=Array.from(e.target.files);
-const album=document.getElementById(‘up-alb’)?.value||albums[0];
-closeModal();let added=0;
-for(const file of files){
-if(gallery.length>=50)break;
-try{
-const blob=await compressImage(file,800,.72);
-const{storage,ref,uploadBytes,getDownloadURL,db,collection,addDoc}=window._fb;
-const sRef=ref(storage,`users/${userId}/gallery/${Date.now()}_${file.name}`);
-await uploadBytes(sRef,blob);
-const url=await getDownloadURL(sRef);
-const docRef=await addDoc(collection(db,‘users’,userId,‘gallery’),{url,album,name:file.name,createdAt:Date.now()});
-gallery.push({id:docRef.id,url,album,name:file.name});added++;
-}catch(err){toast(’Yükleme hatası: ’+err.message);}
-}
-renderGallery();renderAlbumUI();
-if(added)toast(`${added} fotoğraf yüklendi ✓`);
+  const files=Array.from(e.target.files);
+  const album=document.getElementById('up-alb')?.value||albums[0];
+  closeModal(); let added=0;
+  for(const file of files){
+    if(gallery.length>=50)break;
+    try{
+      const url=await toBase64(file);
+      gallery.push({id:'u'+Date.now()+added, url, album, name:file.name});
+      added++;
+    }catch(err){toast('Hata: '+err.message);}
+  }
+  saveGalleryLocal();
+  renderGallery(); renderAlbumUI();
+  if(added)toast(`${added} fotoğraf eklendi ✓`);
 }
 
-async function compressImage(file,maxW,q){
-return new Promise(res=>{
-const img=new Image(),url=URL.createObjectURL(file);
-img.onload=()=>{
-const s=Math.min(1,maxW/img.width);
-const c=document.createElement(‘canvas’);
-c.width=img.width*s;c.height=img.height*s;
-c.getContext(‘2d’).drawImage(img,0,0,c.width,c.height);
-c.toBlob(b=>res(b),‘image/jpeg’,q);URL.revokeObjectURL(url);
-};img.src=url;
-});
+function toBase64(file){
+  return new Promise((res,rej)=>{
+    const reader=new FileReader();
+    reader.onload=e=>res(e.target.result);
+    reader.onerror=()=>rej(new Error('Dosya okunamadı'));
+    reader.readAsDataURL(file);
+  });
 }
 
-async function delGal(id,e){
-e.stopPropagation();if(!confirm(‘Bu fotoğrafı sil?’))return;
-const{db,deleteDoc,doc}=window._fb;
-try{
-await deleteDoc(doc(db,‘users’,userId,‘gallery’,id));
-gallery=gallery.filter(g=>g.id!==id);
-renderGallery();renderAlbumUI();toast(‘Silindi’);
-}catch(e){toast(‘Silme hatası’);}
+function delItem(id,e){
+  e.stopPropagation();
+  if(!confirm('Bu fotoğrafı sil?'))return;
+  gallery=gallery.filter(g=>g.id!==id);
+  saveGalleryLocal();
+  renderGallery(); renderAlbumUI(); toast('Silindi');
 }
 
 function openAlbumModal(){
-showModal(`<h3>🗂 Yeni Albüm</h3> <input id="an" placeholder="Albüm adı…" onkeydown="if(event.key==='Enter')addAlbum()"/> <div class="mdb"> <button class="ok" onclick="addAlbum()">Oluştur</button> <button class="cc" onclick="closeModal()">İptal</button> </div>`);
-setTimeout(()=>document.getElementById(‘an’)?.focus(),50);
+  showModal(`<h3>🗂 Yeni Albüm</h3>
+    <input id="an" placeholder="Albüm adı…"/>
+    <div class="mdb">
+      <button class="ok" onclick="addAlbum()">Oluştur</button>
+      <button class="cc" onclick="closeModal()">İptal</button>
+    </div>`);
+  setTimeout(()=>document.getElementById('an')?.focus(),50);
 }
-
 function addAlbum(){
-const name=document.getElementById(‘an’)?.value.trim();if(!name)return;
-if(!albums.includes(name))albums.push(name);
-renderAlbumUI();toast(‘Albüm oluşturuldu’);closeModal();
+  const name=document.getElementById('an')?.value.trim(); if(!name)return;
+  if(!albums.includes(name))albums.push(name);
+  renderAlbumUI(); toast('Albüm oluşturuldu'); closeModal();
 }
 
 function showModal(html){
-document.getElementById(‘mw’).innerHTML=`<div class="ov" onclick="if(event.target.classList.contains('ov'))closeModal()"><div class="md">${html}</div></div>`;
+  document.getElementById('mw').innerHTML=`<div class="ov" onclick="if(event.target.classList.contains('ov'))closeModal()"><div class="md">${html}</div></div>`;
 }
-function closeModal(){document.getElementById(‘mw’).innerHTML=’’;}
-
+function closeModal(){document.getElementById('mw').innerHTML='';}
 function toast(msg){
-const el=document.createElement(‘div’);el.className=‘toast’;el.textContent=msg;
-document.body.appendChild(el);setTimeout(()=>el.remove(),2800);
+  const el=document.createElement('div'); el.className='toast'; el.textContent=msg;
+  document.body.appendChild(el); setTimeout(()=>el.remove(),2800);
 }
 
-document.getElementById(‘q’).addEventListener(‘keydown’,e=>{
-if(e.key===‘Enter’&&!e.shiftKey){e.preventDefault();doSearch();}
+document.getElementById('q').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSearch();}
 });
 
-window.addEventListener(‘DOMContentLoaded’,init);
+// BOOT
+loadGalleryLocal();
 </script>
 
 </body>
