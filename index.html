@@ -53,7 +53,11 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
 .pgrid{column-gap:var(--gap)}.pgrid.c1{columns:1}.pgrid.c2{columns:2}.pgrid.c3{columns:3}.pgrid.c4{columns:4}
 .pcard{break-inside:avoid;margin-bottom:var(--gap);border-radius:var(--rad);overflow:hidden;position:relative;cursor:pointer;background:#2a2a2a;transition:transform .18s}
 .pcard:hover{transform:scale(1.015)}
-.pcard img{width:100%;display:block;object-fit:cover;min-height:120px}
+.pcard img{width:100%;display:block;object-fit:cover}
+.pcard.h-s img{height:200px}
+.pcard.h-m img{height:280px}
+.pcard.h-l img{height:360px}
+.pcard.h-xl img{height:440px}
 .pov{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.65) 0%,transparent 45%);opacity:0;transition:opacity .2s;border-radius:var(--rad);display:flex;flex-direction:column;justify-content:flex-end;padding:11px}
 .pcard:hover .pov{opacity:1}.ptitle{color:#fff;font-size:.73rem;font-weight:500}
 .pstar{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:14px;border:1px solid rgba(255,255,255,.12)}
@@ -86,21 +90,41 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
 .md img{width:100%;border-radius:11px;max-height:68vh;object-fit:contain}
 .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:#2c2c2c;color:var(--wh);padding:9px 20px;border-radius:22px;font-size:.78rem;z-index:1000;white-space:nowrap;border:1px solid #3a3a3a;animation:fup .28s ease;pointer-events:none}
 @keyframes fup{from{opacity:0;transform:translateX(-50%) translateY(9px)}}
-#mfab{display:none;position:fixed;bottom:20px;left:20px;z-index:200;background:var(--ac);color:#fff;border:none;border-radius:50%;width:46px;height:46px;font-size:1.15rem;cursor:pointer;box-shadow:0 4px 18px rgba(230,0,35,.45);align-items:center;justify-content:center}
+/* LOADING SCREEN */
+#ls{position:fixed;inset:0;background:#111;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .5s}
+#ls.hide{opacity:0;pointer-events:none}
+.ls-shapes{position:absolute;inset:0;overflow:hidden}
+.ls-shape{position:absolute;font-size:1.8rem;animation:float 2.5s ease-in-out infinite}
+@keyframes float{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(-120vh) rotate(360deg);opacity:0}}
+.ls-logo{display:flex;align-items:center;gap:4px;margin-bottom:8px}
+.ls-p{width:56px;height:56px;background:#e60023;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:900;color:#fff;font-family:Georgia,serif;box-shadow:0 4px 20px rgba(230,0,35,.5)}
+.ls-text{font-size:3rem;font-weight:800;color:#fff;font-family:Georgia,serif;letter-spacing:-.03em}
+.ls-sub{font-size:.85rem;color:#666;letter-spacing:.1em;text-transform:uppercase}
+
+#mfab{display:none;position:fixed;bottom:20px;left:20px;z-index:200;background:var(–ac);color:#fff;border:none;border-radius:50%;width:46px;height:46px;font-size:1.15rem;cursor:pointer;box-shadow:0 4px 18px rgba(230,0,35,.45);align-items:center;justify-content:center}
 #mbk{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:99}
 @media(max-width:740px){
-  .lp{position:fixed;left:0;top:0;bottom:0;z-index:100;transform:translateX(-100%)}
-  .lp.open{transform:translateX(0)}
-  #mbk.open{display:block}
-  #mfab{display:flex}
-  .pgrid.c3,.pgrid.c4{columns:2}
-  .gg{grid-template-columns:repeat(2,1fr)}
-  .pills{display:none}
+.lp{position:fixed;left:0;top:0;bottom:0;z-index:100;transform:translateX(-100%)}
+.lp.open{transform:translateX(0)}
+#mbk.open{display:block}
+#mfab{display:flex}
+.pgrid.c3,.pgrid.c4{columns:2}
+.gg{grid-template-columns:repeat(2,1fr)}
+.pills{display:none}
 }
 </style>
+
 </head>
 <body>
-<div class="shell">
+<div id="ls">
+  <div class="ls-shapes" id="ls-shapes"></div>
+  <div class="ls-logo">
+    <div class="ls-p">K</div>
+    <div class="ls-text">ombin</div>
+  </div>
+  <div class="ls-sub">Stil Asistanın</div>
+</div>
+<div class="shell" id="app" style="display:none">
   <div class="lp" id="sidebar">
     <div class="logo">
       <div class="logo-i">👗</div>
@@ -173,6 +197,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
     </div>
   </div>
 </div>
+</div>
 <button id="mfab" onclick="toggleSide()">☰</button>
 <div id="mbk" onclick="toggleSide()"></div>
 <div id="mw"></div>
@@ -182,7 +207,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
 const CLAUDE_KEY   = '';  // console.anthropic.com dan alın
 const GOOGLE_KEY   = '';  // Google Custom Search API key
 const GOOGLE_CX    = '';  // Google Custom Search CX
-const UNSPLASH_KEY = '';  // Opsiyonel
+const UNSPLASH_KEY = 'C_yRkMGiiiPRusXG-gzBteoysa6WqUDjAjVEtDijJL8';
 
 // ── STATE ──
 let grid=3, filters={style:null,gender:null,season:null};
@@ -355,9 +380,11 @@ function renderPins(){
   const pg=document.getElementById('pgrid');
   document.getElementById('empty').style.display=pinResults.length?'none':'flex';
   pg.innerHTML='';
-  pinResults.forEach(img=>{
+  const heights=['h-s','h-m','h-m','h-l','h-m','h-xl','h-s','h-l','h-m','h-s','h-xl','h-m','h-l','h-s'];
+  pinResults.forEach((img,i)=>{
     const star=galScore(img)>0&&gallery.length>0;
-    const c=document.createElement('div'); c.className='pcard';
+    const h=heights[i%heights.length];
+    const c=document.createElement('div'); c.className='pcard '+h;
     c.innerHTML=`
       <img src="${img.thumb||img.url}" alt="${img.title}" loading="lazy"
         onerror="this.style.height='180px';this.style.background='#2a2a2a'"/>
@@ -481,7 +508,27 @@ document.getElementById('q').addEventListener('keydown',e=>{
   if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSearch();}
 });
 
-// BOOT
+// BOOT - Loading screen animation
+(function(){
+  const shapes=['⭐','🌸','💫','✨','🌟','💕','🎀','👗','💎','🌺','⚡','🦋'];
+  const wrap=document.getElementById('ls-shapes');
+  if(!wrap)return;
+  for(let i=0;i<18;i++){
+    const el=document.createElement('div');
+    el.className='ls-shape';
+    el.textContent=shapes[Math.floor(Math.random()*shapes.length)];
+    el.style.left=Math.random()*100+'vw';
+    el.style.top=(60+Math.random()*40)+'vh';
+    el.style.animationDelay=(Math.random()*2)+'s';
+    el.style.animationDuration=(1.5+Math.random()*2)+'s';
+    el.style.fontSize=(1+Math.random()*1.5)+'rem';
+    wrap.appendChild(el);
+  }
+  setTimeout(()=>{
+    const ls=document.getElementById('ls');
+    if(ls){ls.classList.add('hide');setTimeout(()=>{ls.style.display='none';document.getElementById('app').style.display='flex';},500);}
+  },2200);
+})();
 loadGalleryLocal();
 </script>
 
