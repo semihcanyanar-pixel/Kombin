@@ -327,17 +327,20 @@ async function fetchGoogle(query){
 async function fetchUnsplash(query){
   if(UNSPLASH_KEY){
     try{
-      const d=await(await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=15&orientation=portrait&client_id=${UNSPLASH_KEY}`)).json();
+      const d=await(await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=20&orientation=portrait&client_id=${UNSPLASH_KEY}`)).json();
       if(d.results?.length)return d.results.map(p=>({url:p.urls.regular,thumb:p.urls.small,title:p.alt_description||query,tags:(p.tags||[]).map(t=>t.title)}));
     }catch(e){}
   }
-  const kws=[query,query+' fashion',query+' style',query+' outfit',query+' look',query+' ootd',query+' clothing',query+' trendy',query+' streetstyle',query+' apparel'];
-  const dims=[[400,550],[380,560],[420,540],[410,580],[390,520],[430,570],[415,560],[395,590],[425,530],[440,610]];
-  const t=Date.now()%9999;
-  return kws.map((kw,i)=>({
-    url:`https://source.unsplash.com/${dims[i][0]}x${dims[i][1]}/?${encodeURIComponent(kw)}&sig=${i+t}`,
-    thumb:`https://source.unsplash.com/${dims[i][0]}x${dims[i][1]}/?${encodeURIComponent(kw)}&sig=${i+t}`,
-    title:kw,tags:kw.split(' ')
+  // Picsum + fashion keywords as reliable fallback
+  const fashionIds=[1036,1035,1040,1041,1043,1044,1052,1055,1062,1066,
+                    1078,1083,1084,1085,1086,1088,1089,1090,1091,1092,
+                    334,335,336,337,338,339,340,341];
+  const t=Date.now();
+  return fashionIds.slice(0,14).map((id,i)=>({
+    url:`https://picsum.photos/seed/${id+t}/600/800`,
+    thumb:`https://picsum.photos/seed/${id+t}/400/550`,
+    title:query+' style '+(i+1),
+    tags:query.split(' ')
   }));
 }
 
