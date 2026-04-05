@@ -18,12 +18,12 @@
   import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
   import { getRemoteConfig, fetchAndActivate, getValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-remote-config.js";
   const firebaseConfig = {
-    apiKey:"YOUR_FIREBASE_API_KEY",
-    authDomain:"YOUR_PROJECT.firebaseapp.com",
-    projectId:"YOUR_PROJECT_ID",
-    storageBucket:"YOUR_PROJECT.appspot.com",
-    messagingSenderId:"YOUR_SENDER_ID",
-    appId:"YOUR_APP_ID"
+    apiKey:"AIzaSyA8nrpyo6qdVDzeMg8E2p5GZxqrFjFgGfU",
+    authDomain:"kombin-d1288.firebaseapp.com",
+    projectId:"kombin-d1288",
+    storageBucket:"kombin-d1288.firebasestorage.app",
+    messagingSenderId:"685494136121",
+    appId:"1:685494136121:web:83cb5517f59d6ec9010ce8"
   };
   const app=initializeApp(firebaseConfig);
   const auth=getAuth(app),db=getFirestore(app),storage=getStorage(app);
