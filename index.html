@@ -15,6 +15,10 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden;background:var(--bg)}
 body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:antialiased}
+/* iPhone safe area */
+.shell{padding-top:env(safe-area-inset-top)}
+#mfab{bottom:calc(20px + env(safe-area-inset-bottom))}
+.lp{padding-bottom:calc(70px + env(safe-area-inset-bottom))}
 .shell{display:flex;height:100vh;width:100vw}
 .lp{width:var(--pw);min-width:var(--pw);background:var(--sf);border-right:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;transition:transform .28s cubic-bezier(.4,0,.2,1)}
 .lpb{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:70px}
@@ -103,14 +107,27 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
 
 #mfab{display:none;position:fixed;bottom:20px;left:20px;z-index:200;background:var(–ac);color:#fff;border:none;border-radius:50%;width:46px;height:46px;font-size:1.15rem;cursor:pointer;box-shadow:0 4px 18px rgba(230,0,35,.45);align-items:center;justify-content:center}
 #mbk{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:99}
-@media(max-width:740px){
-.lp{position:fixed;left:0;top:0;bottom:0;z-index:100;transform:translateX(-100%)}
+@media(max-width:900px){
+.lp{position:fixed;left:0;top:0;bottom:0;z-index:100;transform:translateX(-100%);width:280px;min-width:280px}
 .lp.open{transform:translateX(0)}
 #mbk.open{display:block}
 #mfab{display:flex}
-.pgrid.c3,.pgrid.c4{columns:2}
-.gg{grid-template-columns:repeat(2,1fr)}
 .pills{display:none}
+}
+@media(max-width:600px){
+.pgrid.c3,.pgrid.c4{columns:2}
+.pgrid.c2{columns:2}
+.gg{grid-template-columns:repeat(2,1fr)}
+.nav{padding:8px 10px;gap:6px}
+.ntab{padding:5px 10px;font-size:.72rem}
+#mfab{bottom:24px;left:14px;width:50px;height:50px;font-size:1.3rem}
+.md{margin:0 8px;padding:16px}
+.ls-text{font-size:2.2rem}
+.ls-p{width:46px;height:46px;font-size:1.6rem}
+}
+@media(max-width:390px){
+.pgrid.c3,.pgrid.c4,.pgrid.c2{columns:1}
+.ntab{padding:4px 8px;font-size:.68rem}
 }
 </style>
 
