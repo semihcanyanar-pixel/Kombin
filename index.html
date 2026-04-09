@@ -10,6 +10,27 @@
 <title>Kombin – Stil Asistanın</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+  import { getRemoteConfig, fetchAndActivate, getValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-remote-config.js";
+  const firebaseConfig = {
+    apiKey:"AIzaSyA8nrpyo6qdVDzeMg8E2p5GZxqrFjFgGfU",
+    authDomain:"kombin-d1288.firebaseapp.com",
+    projectId:"kombin-d1288",
+    storageBucket:"kombin-d1288.firebasestorage.app",
+    messagingSenderId:"685494136121",
+    appId:"1:685494136121:web:83cb5517f59d6ec9010ce8"
+  };
+  const app=initializeApp(firebaseConfig);
+  const auth=getAuth(app),db=getFirestore(app),storage=getStorage(app);
+  const remoteConfig=getRemoteConfig(app);
+  remoteConfig.settings.minimumFetchIntervalMillis=3600000;
+  window._fb={auth,db,storage,remoteConfig,signInAnonymously,onAuthStateChanged,
+    collection,addDoc,getDocs,deleteDoc,doc,ref,uploadBytes,getDownloadURL,fetchAndActivate,getValue};
+</script>
 <style>
 :root{--bg:#111;--sf:#1c1c1c;--bd:#2c2c2c;--tx:#e8e8e8;--mu:#777;--ac:#e60023;--wh:#fff;--gap:10px;--rad:16px;--pw:272px}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -220,11 +241,12 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
 <div id="mw"></div>
 
 <script>
-// ── API KEYS (Firebase Remote Config yerine buraya girildi) ──
-const CLAUDE_KEY   = '';  // console.anthropic.com dan alın
-const GOOGLE_KEY   = '';  // Google Custom Search API key
-const GOOGLE_CX    = '';  // Google Custom Search CX
-const UNSPLASH_KEY = 'C_yRkMGiiiPRusXG-gzBteoysa6WqUDjAjVEtDijJL8';
+// ── API KEYS (Firebase Remote Config'ten yüklenir) ──
+let CLAUDE_KEY   = '';
+let GOOGLE_KEY   = '';
+let GOOGLE_CX    = '';
+let UNSPLASH_KEY = 'C_yRkMGiiiPRusXG-gzBteoysa6WqUDjAjVEtDijJL8';
+let _userId      = null;
 
 // ── STATE ──
 let grid=3, filters={style:null,gender:null,season:null};
@@ -320,26 +342,39 @@ async function applyFilters(){
 }
 
 async function refineQuery(q){
-  if(!CLAUDE_KEY){
-    const map={'kadın':'women','erkek':'men','kız çocuk':'girls','erkek çocuk':'boys',
-      'spor':'sporty','casual':'casual','smart casual':'smart casual',
-      'klasik':'classic','boho':'bohemian','kış':'winter','yaz':'summer',
-      'ilkbahar':'spring','sonbahar':'fall','kombin':'outfit'};
-    let r=q.toLowerCase();
-    Object.entries(map).forEach(([tr,en])=>{r=r.replace(new RegExp(tr,'g'),en);});
-    return r+' fashion look';
-  }
+  const lower = q.toLowerCase();
+  // Türkçe → İngilizce detaylı çeviri
+  const map=[
+    ['erkek çocuk','boys kids'],['kız çocuk','girls kids'],
+    ['kadın','women'],['erkek','men'],
+    ['kış','winter'],['yaz','summer'],['ilkbahar','spring'],['sonbahar','fall autumn'],
+    ['spor','athletic sporty streetwear'],['smart casual','smart casual'],
+    ['casual','casual everyday'],['klasik','classic formal elegant'],
+    ['boho','bohemian boho'],['kombin','outfit look style'],
+    ['takım','suit outfit'],['elbise','dress'],['pantolon','pants trousers'],
+    ['etek','skirt'],['ceket','jacket blazer'],['kazak','sweater knit'],
+    ['mont','coat winter jacket'],['sneaker','sneakers'],['topuklu','heels']
+  ];
+  let r = lower;
+  map.forEach(([tr,en])=>{ r = r.replace(new RegExp(tr,'g'), en); });
+  // Temizle ve fashion ekle
+  r = r.replace(/\s+/g,' ').trim();
+  if(!r.includes('outfit')&&!r.includes('look')&&!r.includes('style')) r += ' outfit';
+  if(!r.includes('fashion')&&!r.includes('style')) r += ' fashion';
+
+  if(!CLAUDE_KEY) return r;
+
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'x-api-key':CLAUDE_KEY,'anthropic-version':'2023-06-01','content-type':'application/json'},
-      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:40,
-        system:'Convert Turkish fashion query to English search keywords (4-6 words). Return ONLY the keywords.',
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:50,
+        system:'Convert this to a precise English Unsplash photo search query for fashion/outfit photos. Be very specific about clothing style. Return ONLY 4-7 words.',
         messages:[{role:'user',content:q}]})
     });
     const d=await resp.json();
-    return d.content?.[0]?.text?.trim()||q+' outfit';
-  }catch(e){return q+' fashion outfit';}
+    return d.content?.[0]?.text?.trim()||r;
+  }catch(e){return r;}
 }
 
 async function fetchImages(query){
@@ -369,8 +404,24 @@ async function fetchGoogle(query){
 async function fetchUnsplash(query){
   if(UNSPLASH_KEY){
     try{
-      const d=await(await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=20&orientation=portrait&client_id=${UNSPLASH_KEY}`)).json();
-      if(d.results?.length)return d.results.map(p=>({url:p.urls.regular,thumb:p.urls.small,title:p.alt_description||query,tags:(p.tags||[]).map(t=>t.title)}));
+      // Birden fazla varyant sorgula, daha fazla sonuç
+      const variants=[
+        query,
+        query.replace('outfit','look'),
+        query.replace('fashion','style streetwear'),
+      ];
+      const allResults=[];
+      for(const v of variants){
+        const d=await(await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(v)}&per_page=10&orientation=portrait&client_id=${UNSPLASH_KEY}&order_by=relevant`)).json();
+        if(d.results?.length){
+          d.results.forEach(p=>{
+            if(!allResults.find(x=>x.url===p.urls.regular)){
+              allResults.push({url:p.urls.regular,thumb:p.urls.small,title:'',tags:(p.tags||[]).map(t=>t.title)});
+            }
+          });
+        }
+      }
+      if(allResults.length) return allResults;
     }catch(e){}
   }
   // Picsum + fashion keywords as reliable fallback
@@ -405,7 +456,7 @@ function renderPins(){
     c.innerHTML=`
       <img src="${img.thumb||img.url}" alt="${img.title}" loading="lazy"
         onerror="this.style.height='180px';this.style.background='#2a2a2a'"/>
-      <div class="pov"><span class="ptitle">${img.title.split('|')[0].trim()}</span></div>
+      <div class="pov"></div>
       ${star?'<div class="pstar" title="Gardrobunuzla uyumlu!">⭐</div>':''}`;
     c.onclick=()=>showModal(`
       <img src="${img.url}" style="margin-bottom:10px" onerror="this.style.display='none'"/>
@@ -471,6 +522,19 @@ async function handleUpload(e){
     if(gallery.length>=50)break;
     try{
       const url=await toBase64(file);
+      // Firebase varsa oraya kaydet
+      if(window._fb && _userId){
+        try{
+          const{storage,ref,uploadBytes,getDownloadURL,db,collection,addDoc}=window._fb;
+          const blob = await compressImg(file,800,.72);
+          const sRef = ref(storage,`users/${_userId}/gallery/${Date.now()}_${file.name}`);
+          await uploadBytes(sRef,blob);
+          const fbUrl = await getDownloadURL(sRef);
+          const docRef = await addDoc(collection(db,'users',_userId,'gallery'),{url:fbUrl,album,name:file.name,createdAt:Date.now()});
+          gallery.push({id:docRef.id,url:fbUrl,album,name:file.name});
+          added++; continue;
+        }catch(e){ console.warn('Firebase upload failed, using local',e); }
+      }
       gallery.push({id:'u'+Date.now()+added, url, album, name:file.name});
       added++;
     }catch(err){toast('Hata: '+err.message);}
@@ -480,6 +544,18 @@ async function handleUpload(e){
   if(added)toast(`${added} fotoğraf eklendi ✓`);
 }
 
+async function compressImg(file,maxW,q){
+  return new Promise(res=>{
+    const img=new Image(),url=URL.createObjectURL(file);
+    img.onload=()=>{
+      const s=Math.min(1,maxW/img.width);
+      const c=document.createElement('canvas');
+      c.width=img.width*s;c.height=img.height*s;
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      c.toBlob(b=>res(b),'image/jpeg',q);URL.revokeObjectURL(url);
+    };img.src=url;
+  });
+}
 function toBase64(file){
   return new Promise((res,rej)=>{
     const reader=new FileReader();
@@ -489,9 +565,15 @@ function toBase64(file){
   });
 }
 
-function delItem(id,e){
+async function delItem(id,e){
   e.stopPropagation();
   if(!confirm('Bu fotoğrafı sil?'))return;
+  if(window._fb && _userId){
+    try{
+      const{db,deleteDoc,doc}=window._fb;
+      await deleteDoc(doc(db,'users',_userId,'gallery',id));
+    }catch(e){}
+  }
   gallery=gallery.filter(g=>g.id!==id);
   saveGalleryLocal();
   renderGallery(); renderAlbumUI(); toast('Silindi');
@@ -524,6 +606,38 @@ function toast(msg){
 document.getElementById('q').addEventListener('keydown',e=>{
   if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSearch();}
 });
+
+// BOOT - Firebase init + Loading screen
+async function initFirebase(){
+  if(!window._fb) return;
+  const{auth,signInAnonymously,onAuthStateChanged,remoteConfig,fetchAndActivate,getValue,db,collection,getDocs}=window._fb;
+  try{ await signInAnonymously(auth); }catch(e){}
+  onAuthStateChanged(auth, async user=>{
+    if(!user) return;
+    _userId = user.uid;
+    // Remote Config'ten key'leri al
+    try{
+      await Promise.race([
+        fetchAndActivate(remoteConfig),
+        new Promise((_,r)=>setTimeout(()=>r('timeout'),4000))
+      ]);
+      const ck = getValue(remoteConfig,'claude_api_key').asString();
+      const gk = getValue(remoteConfig,'google_api_key').asString();
+      const gc = getValue(remoteConfig,'google_cx').asString();
+      if(ck) CLAUDE_KEY = ck;
+      if(gk) GOOGLE_KEY = gk;
+      if(gc) GOOGLE_CX  = gc;
+    }catch(e){ console.warn('Remote config timeout, using defaults'); }
+    // Firestore'dan galeriyi yükle
+    try{
+      const snap = await getDocs(collection(db,'users',_userId,'gallery'));
+      gallery=[];
+      snap.forEach(d=>gallery.push({id:d.id,...d.data()}));
+      renderGallery(); renderAlbumUI();
+    }catch(e){ loadGalleryLocal(); }
+  });
+}
+initFirebase();
 
 // BOOT - Loading screen animation
 (function(){
