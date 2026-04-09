@@ -848,31 +848,57 @@ async function initFirebase(){
     // Firestore'dan galeriyi yükle
     try{
       const snap=await getDocs(collection(db,'users',_userId,'gallery'));
-      gallery=[];
-      snap.forEach(d=>gallery.push({id:d.id,...d.data()}));
-      // Eski format uyumluluğu: album → gender dönüşümü
-      gallery.forEach(g=>{
-        if(!g.gender&&g.album){
-          if(g.album==='Kadın'||g.album==='Günlük'||g.album==='Özel Gün') g.gender='Kadın';
-          else if(g.album==='Erkek') g.gender='Erkek';
-          else if(g.album==='Kız Çocuk') g.gender='Kız Çocuk';
-          else if(g.album==='Erkek Çocuk') g.gender='Erkek Çocuk';
-          else g.gender='Kadın';
-          g.subAlbum=g.album!==g.gender?g.album:'';
+      const fbGallery=[];
+      snap.forEach(d=>fbGallery.push({id:d.id,...d.data()}));
+      if(fbGallery.length>0){
+        // Firebase'de veri var, onu kullan
+        gallery=fbGallery;
+        // Eski format uyumluluğu
+        gallery.forEach(g=>{
+          if(!g.gender&&g.album){
+            if(g.album==='Kadın'||g.album==='Günlük'||g.album==='Özel Gün') g.gender='Kadın';
+            else if(g.album==='Erkek') g.gender='Erkek';
+            else if(g.album==='Kız Çocuk') g.gender='Kız Çocuk';
+            else if(g.album==='Erkek Çocuk') g.gender='Erkek Çocuk';
+            else g.gender='Kadın';
+            g.subAlbum=g.album!==g.gender?g.album:'';
+          }
+          if(!g.gender) g.gender='Kadın';
+          if(!g.subAlbum) g.subAlbum='';
+        });
+        // LocalStorage'ı da güncelle (offline yedek)
+        saveLocal();
+      } else if(gallery.length>0){
+        // Firebase boş ama localStorage'da veri var → Firebase'e aktar
+        toast('Fotoğraflarınız yükleniyor…');
+        for(const item of gallery){
+          try{
+            const{addDoc}=window._fb;
+            const docRef=await addDoc(collection(db,'users',_userId,'gallery'),{
+              url:item.url, gender:item.gender||'Kadın',
+              subAlbum:item.subAlbum||'', name:item.name||'foto',
+              createdAt:Date.now()
+            });
+            item.id=docRef.id;
+          }catch(e){}
         }
-        if(!g.gender) g.gender='Kadın';
-        if(!g.subAlbum) g.subAlbum='';
-      });
-    }catch(e){loadLocal();}
+        saveLocal();
+        toast('Fotoğraflar buluta aktarıldı ✓');
+      }
+    }catch(e){
+      console.warn('Firestore error:',e);
+      // Firebase başarısız → localStorage kullan
+      loadLocal();
+    }
     renderGallery(); renderSubChips();
   });
 }
 
 // ── BOOT ──
-loadLocal();
-initFirebase();
-renderGallery();
+loadLocal();         // Önce localStorage'dan yükle (hızlı)
+renderGallery();     // Hemen göster
 renderSubChips();
+initFirebase();      // Arka planda Firebase senkronize et
 
 // Loading screen
 (function(){
@@ -890,8 +916,15 @@ renderSubChips();
   }
   setTimeout(()=>{
     const ls=document.getElementById('ls');
-    if(ls){ls.classList.add('hide');setTimeout(()=>{ls.style.display='none';document.getElementById('app').style.display='flex';},500);}
-  },2200);
+    if(ls){
+      ls.classList.add('hide');
+      setTimeout(()=>{
+        ls.style.display='none';
+        const app=document.getElementById('app');
+        if(app) app.style.display='flex';
+      },500);
+    }
+  },1800);
 })();
 </script>
 
