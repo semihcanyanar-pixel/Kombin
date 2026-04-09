@@ -358,29 +358,41 @@ const HEIGHTS = ['h-m','h-l','h-m','h-s','h-xl','h-m','h-l','h-s','h-m','h-xl','
    FIREBASE INIT
 ═══════════════════════════════════════ */
 function initApp() {
+  // 6 saniye içinde Firebase bağlanamazsa yine de aç
+  const fallbackTimer = setTimeout(() => {
+    console.warn('Firebase timeout - showing app anyway');
+    showApp();
+  }, 6000);
+
   _auth.signInAnonymously()
-    .then(() => { /* onAuthStateChanged handles the rest */ })
-    .catch(err => { console.warn('Auth error:', err); showApp(); });
+    .catch(err => { console.warn('Auth error:', err); });
 
   _auth.onAuthStateChanged(async user => {
+    clearTimeout(fallbackTimer);
     if (!user) { showApp(); return; }
     userId = user.uid;
 
-    // Remote Config
+    // Remote Config (sessiz hata)
     try {
-      await _rc.fetchAndActivate();
+      await Promise.race([
+        _rc.fetchAndActivate(),
+        new Promise((_, r) => setTimeout(() => r('rc_timeout'), 3000))
+      ]);
       const ck = _rc.getValue('claude_api_key').asString();
       const gk = _rc.getValue('google_api_key').asString();
       const gc = _rc.getValue('google_cx').asString();
       if (ck) CLAUDE_KEY = ck;
       if (gk) GOOGLE_KEY = gk;
       if (gc) GOOGLE_CX  = gc;
-    } catch(e) { console.warn('Remote config error:', e); }
+    } catch(e) { console.warn('Remote config skipped:', e); }
 
-    // Firestore'dan galeriyi yükle
+    // Firestore'dan galeriyi yükle (sessiz hata)
     try {
-      const snap = await _db.collection('users').doc(userId).collection('gallery').get();
-      if (!snap.empty) {
+      const snap = await Promise.race([
+        _db.collection('users').doc(userId).collection('gallery').get(),
+        new Promise((_, r) => setTimeout(() => r('fs_timeout'), 5000))
+      ]);
+      if (snap && !snap.empty) {
         gallery = [];
         snap.forEach(d => gallery.push({ id: d.id, ...d.data() }));
         gallery.forEach(g => {
@@ -388,13 +400,15 @@ function initApp() {
           if (!g.subAlbum) g.subAlbum = '';
         });
       }
-      // Sub albümleri yükle
-      const saDoc = await _db.collection('users').doc(userId).collection('settings').doc('subAlbums').get();
-      if (saDoc.exists) {
+      const saDoc = await Promise.race([
+        _db.collection('users').doc(userId).collection('settings').doc('subAlbums').get(),
+        new Promise((_, r) => setTimeout(() => r('sa_timeout'), 3000))
+      ]);
+      if (saDoc && saDoc.exists) {
         const data = saDoc.data();
         Object.keys(data).forEach(k => { if (subAlbums[k]) subAlbums[k] = data[k]; });
       }
-    } catch(e) { console.warn('Firestore load error:', e); }
+    } catch(e) { console.warn('Firestore load skipped:', e); }
 
     renderGallery();
     renderSubChips();
@@ -930,7 +944,7 @@ async function handleUpload(e) {
   const subAlbum = (document.getElementById('up-sub') && document.getElementById('up-sub').value) || '';
   closeModal();
   let added = 0;
-  const uploadToast = showToast('Yükleniyor…', true);
+  // upload started
   for (const file of files) {
     if (gallery.length >= 50) break;
     try {
@@ -956,7 +970,7 @@ async function handleUpload(e) {
       toast('Yükleme hatası: ' + err.message);
     }
   }
-  if (uploadToast) uploadToast.remove();
+  // upload done
   renderGallery();
   renderSubChips();
   if (added > 0) toast(added + ' fotoğraf yüklendi ✓');
