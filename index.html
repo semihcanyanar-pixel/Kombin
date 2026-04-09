@@ -425,53 +425,122 @@ async function refineQuery(q){
 
 // ── GÖRSEL ÇEKME ──
 async function fetchImages(query, genderHint){
-  const[gI,uI]=await Promise.all([fetchGoogle(query),fetchUnsplash(query)]);
-  const merged=[];let gi=0,ui=0;
-  while(merged.length<28){
-    if(gi<gI.length&&merged.length%3<2)merged.push(gI[gi++]);
-    else if(ui<uI.length)merged.push(uI[ui++]);
-    else if(gi<gI.length)merged.push(gI[gi++]);
-    else break;
-  }
-  // Galerideki kıyafetlerle eşleştir — cinsiyet filtresine göre
   const genderGallery = genderHint ? gallery.filter(g=>g.gender===genderHint) : gallery;
-  const scored=merged.map(img=>({img,s:galScore(img,genderGallery)}));
+
+  // Görsel arama + Vision analizi paralel başlat
+  const [gI, uI, galleryProfile] = await Promise.all([
+    fetchGoogle(query),
+    fetchUnsplash(query),
+    CLAUDE_KEY && genderGallery.length ? buildGalleryProfile(genderGallery) : Promise.resolve(null)
+  ]);
+
+  // Tekrarları önle — URL bazlı dedup
+  const seen = new Set();
+  const all = [...gI, ...uI].filter(img=>{
+    const key = img.pid || img.url;
+    if(seen.has(key)) return false;
+    seen.add(key); return true;
+  });
+
+  // Pinterest sonuçlarını öne al, sonra Unsplash
+  const pinterest = all.filter(img=>img.isPinterest);
+  const unsplash  = all.filter(img=>!img.isPinterest);
+  const merged = [...pinterest, ...unsplash].slice(0,30);
+
+  // Vision profiliyle skorla
+  const scored = merged.map(img=>({img, s:galScore(img, genderGallery, galleryProfile)}));
   scored.sort((a,b)=>b.s-a.s);
-  pinResults=scored.map(x=>x.img);
+  pinResults = scored.map(x=>x.img);
   renderPins();
 }
 
 async function fetchGoogle(query){
   if(!GOOGLE_KEY||!GOOGLE_CX)return[];
   try{
-    const url=`https://www.googleapis.com/customsearch/v1?key=${GOOGLE_KEY}&cx=${GOOGLE_CX}&q=${encodeURIComponent(query)}&searchType=image&num=10&imgSize=large&safe=active`;
+    // site:pinterest.com ile sadece Pinterest'ten çek
+    const pq=`site:pinterest.com ${query} outfit`;
+    const url=`https://www.googleapis.com/customsearch/v1?key=${GOOGLE_KEY}&cx=${GOOGLE_CX}&q=${encodeURIComponent(pq)}&searchType=image&num=10&imgSize=large&safe=active`;
     const d=await(await fetch(url)).json();
-    return(d.items||[]).map(item=>({url:item.link,thumb:item.image?.thumbnailLink||item.link,title:'',tags:[]}));
+    const seen=new Set();
+    return(d.items||[]).filter(item=>{
+      if(seen.has(item.link))return false;
+      seen.add(item.link); return true;
+    }).map(item=>({
+      url:item.link,
+      thumb:item.image?.thumbnailLink||item.link,
+      title:'', tags:[], isPinterest:true
+    }));
   }catch(e){return[];}
 }
 
 async function fetchUnsplash(query){
   try{
-    const variants=[query,query.replace('outfit','look'),query+' style'];
-    const all=[];
-    for(const v of variants){
-      const d=await(await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(v)}&per_page=10&orientation=portrait&client_id=${UNSPLASH_KEY}&order_by=relevant`)).json();
-      (d.results||[]).forEach(p=>{
-        if(!all.find(x=>x.url===p.urls.regular))
-          all.push({url:p.urls.regular,thumb:p.urls.small,title:'',tags:(p.tags||[]).map(t=>t.title)});
-      });
-    }
-    return all;
+    const d=await(await fetch(
+      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=20&orientation=portrait&client_id=${UNSPLASH_KEY}&order_by=relevant`
+    )).json();
+    const seen=new Set();
+    return(d.results||[]).filter(p=>{
+      if(seen.has(p.id))return false;
+      seen.add(p.id); return true;
+    }).map(p=>({
+      url:p.urls.regular, thumb:p.urls.small,
+      title:'', tags:(p.tags||[]).map(t=>t.title), pid:p.id
+    }));
   }catch(e){return[];}
 }
 
-function galScore(img,genderGallery){
-  if(!genderGallery||!genderGallery.length)return 0;
-  const kw=[...new Set(genderGallery.flatMap(g=>[
-    ...(g.subAlbum||'').toLowerCase().split(/\s+/),
-    ...(g.gender||'').toLowerCase().split(/\s+/)
-  ]))].filter(k=>k.length>2);
-  const txt=(img.title+' '+(img.tags||[]).join(' ')).toLowerCase();
+// ── GALERİ GÖRSEL ANALİZİ (Claude Vision) ──
+const _visionCache = {};
+
+async function analyzeGalleryItem(item){
+  if(!CLAUDE_KEY||!item.url)return null;
+  if(_visionCache[item.id])return _visionCache[item.id];
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'x-api-key':CLAUDE_KEY,'anthropic-version':'2023-06-01','content-type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-haiku-4-5-20251001',max_tokens:150,
+        system:'Analyze clothing photo. Return ONLY valid JSON: {"type":"shirt","color":"blue","style":"casual","keywords":["denim","casual","streetwear"]}',
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'url',url:item.url}},
+          {type:'text',text:'Analyze this clothing item. Return JSON only.'}
+        ]}]
+      })
+    });
+    const d=await resp.json();
+    const txt=(d.content?.[0]?.text||'{}').replace(/```json|```/g,'').trim();
+    const result=JSON.parse(txt);
+    _visionCache[item.id]=result;
+    return result;
+  }catch(e){return null;}
+}
+
+async function buildGalleryProfile(genderGallery){
+  if(!genderGallery?.length)return null;
+  const toAnalyze=genderGallery.slice(0,8);
+  const analyses=await Promise.all(toAnalyze.map(item=>analyzeGalleryItem(item)));
+  const valid=analyses.filter(Boolean);
+  if(!valid.length)return null;
+  return [...new Set(valid.flatMap(a=>[
+    a.type||'',a.style||'',...(a.keywords||[])
+  ].filter(Boolean).map(k=>k.toLowerCase())))];
+}
+
+function galScore(img,genderGallery,galleryProfile){
+  if(!genderGallery?.length)return 0;
+  const imgTags=(img.tags||[]).map(t=>t.toLowerCase());
+  if(!imgTags.length)return 0;
+  if(galleryProfile?.length){
+    let score=0;
+    galleryProfile.forEach(kw=>{
+      if(imgTags.some(t=>t.includes(kw)||kw.includes(t)))score++;
+    });
+    return score;
+  }
+  // Fallback keyword match
+  const kw=[...new Set((genderGallery||[]).flatMap(g=>(g.subAlbum||'').toLowerCase().split(' ')))].filter(k=>k.length>2);
+  const txt=imgTags.join(' ');
   return kw.filter(k=>txt.includes(k)).length;
 }
 
@@ -482,7 +551,7 @@ function renderPins(){
   document.getElementById('empty').style.display=pinResults.length?'none':'flex';
   pg.innerHTML='';
   pinResults.forEach((img,i)=>{
-    const star=gallery.length>0&&galScore(img,gallery)>0;
+    const star=gallery.length>0&&galScore(img,gallery,null)>0;
     const c=document.createElement('div');
     c.className='pcard '+HEIGHTS[i%HEIGHTS.length];
     c.innerHTML=`
