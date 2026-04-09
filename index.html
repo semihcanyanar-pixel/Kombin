@@ -10,164 +10,221 @@
 <title>Kombin – Stil Asistanın</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-  import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-  import { getRemoteConfig, fetchAndActivate, getValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-remote-config.js";
-  const firebaseConfig = {
-    apiKey:"AIzaSyA8nrpyo6qdVDzeMg8E2p5GZxqrFjFgGfU",
-    authDomain:"kombin-d1288.firebaseapp.com",
-    projectId:"kombin-d1288",
-    storageBucket:"kombin-d1288.firebasestorage.app",
-    messagingSenderId:"685494136121",
-    appId:"1:685494136121:web:83cb5517f59d6ec9010ce8"
-  };
-  const app=initializeApp(firebaseConfig);
-  const auth=getAuth(app),db=getFirestore(app),storage=getStorage(app);
-  const remoteConfig=getRemoteConfig(app);
-  remoteConfig.settings.minimumFetchIntervalMillis=3600000;
-  window._fb={auth,db,storage,remoteConfig,signInAnonymously,onAuthStateChanged,
-    collection,addDoc,getDocs,deleteDoc,doc,updateDoc,ref,uploadBytes,getDownloadURL,deleteObject,fetchAndActivate,getValue};
+
+<!-- Firebase SDK (compat version - global scope) -->
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-remote-config-compat.js"></script>
+
+<script>
+// Firebase başlat
+const firebaseConfig = {
+  apiKey: "AIzaSyA8nrpyo6qdVDzeMg8E2p5GZxqrFjFgGfU",
+  authDomain: "kombin-d1288.firebaseapp.com",
+  projectId: "kombin-d1288",
+  storageBucket: "kombin-d1288.firebasestorage.app",
+  messagingSenderId: "685494136121",
+  appId: "1:685494136121:web:83cb5517f59d6ec9010ce8"
+};
+firebase.initializeApp(firebaseConfig);
+const _auth    = firebase.auth();
+const _db      = firebase.firestore();
+const _storage = firebase.storage();
+const _rc      = firebase.remoteConfig();
+_rc.settings.minimumFetchIntervalMillis = 3600000;
+_rc.defaultConfig = { claude_api_key:'', google_api_key:'', google_cx:'', unsplash_access_key:'' };
 </script>
+
 <style>
-:root{--bg:#111;--sf:#1c1c1c;--bd:#2c2c2c;--tx:#e8e8e8;--mu:#777;--ac:#e60023;--wh:#fff;--gap:10px;--rad:16px;--pw:272px}
+:root{
+  --bg:#111;--sf:#1c1c1c;--bd:#2c2c2c;--tx:#e8e8e8;--mu:#777;
+  --ac:#e60023;--wh:#fff;--gap:10px;--rad:16px;--pw:272px;
+}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden;background:var(--bg)}
 body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:antialiased}
-.shell{padding-top:env(safe-area-inset-top);display:flex;height:100vh;width:100vw}
-#mfab{bottom:calc(20px + env(safe-area-inset-bottom))}
-.lp{padding-bottom:calc(70px + env(safe-area-inset-bottom));width:var(--pw);min-width:var(--pw);background:var(--sf);border-right:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;transition:transform .28s cubic-bezier(.4,0,.2,1)}
-.lpb{flex:1;overflow-y:auto;overflow-x:hidden}
+
+/* LOADING */
+#ls{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;z-index:9999;transition:opacity .5s}
+#ls.hide{opacity:0;pointer-events:none}
+.ls-shapes{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.ls-shape{position:absolute;animation:lsfloat 2.5s ease-in-out forwards}
+@keyframes lsfloat{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(-110vh) rotate(360deg);opacity:0}}
+.ls-logo{display:flex;align-items:center;gap:4px;margin-bottom:8px;position:relative;z-index:1}
+.ls-p{width:54px;height:54px;background:var(--ac);border-radius:50%;display:flex;
+  align-items:center;justify-content:center;font-size:1.9rem;font-weight:900;
+  color:#fff;font-family:Georgia,serif;box-shadow:0 4px 24px rgba(230,0,35,.5)}
+.ls-text{font-size:3rem;font-weight:800;color:#fff;font-family:Georgia,serif;letter-spacing:-.03em}
+.ls-sub{font-size:.8rem;color:#555;letter-spacing:.12em;text-transform:uppercase;position:relative;z-index:1}
+
+/* SHELL */
+.shell{display:flex;height:100vh;width:100vw;padding-top:env(safe-area-inset-top)}
+
+/* LEFT PANEL */
+.lp{width:var(--pw);min-width:var(--pw);background:var(--sf);
+  border-right:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;
+  transition:transform .28s cubic-bezier(.4,0,.2,1)}
+.lpb{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(70px + env(safe-area-inset-bottom))}
 .lpb::-webkit-scrollbar{width:3px}.lpb::-webkit-scrollbar-thumb{background:#333;border-radius:3px}
-.logo{padding:16px 16px 13px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--bd);flex-shrink:0}
-.logo-i{width:32px;height:32px;background:var(--ac);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.logo{padding:16px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.logo-i{width:32px;height:32px;background:var(--ac);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px}
 .logo-n{font-size:1rem;font-weight:600;color:var(--wh)}.logo-s{font-size:.65rem;color:var(--mu);margin-top:1px}
-.sb{padding:13px 13px 9px;border-bottom:1px solid var(--bd)}
-.sb textarea{width:100%;background:#252525;border:1px solid #333;border-radius:22px;padding:9px 15px;font-family:'DM Sans';font-size:.8rem;color:var(--tx);resize:none;outline:none;min-height:60px;line-height:1.45;transition:border-color .2s}
+.sb{padding:12px 12px 8px;border-bottom:1px solid var(--bd)}
+.sb textarea{width:100%;background:#252525;border:1px solid #333;border-radius:22px;
+  padding:9px 14px;font-family:'DM Sans';font-size:.8rem;color:var(--tx);
+  resize:none;outline:none;min-height:58px;line-height:1.4;transition:border-color .2s}
 .sb textarea::placeholder{color:var(--mu)}.sb textarea:focus{border-color:#555}
-.sgo{margin-top:7px;width:100%;background:var(--ac);color:#fff;border:none;border-radius:22px;padding:9px 0;font-size:.8rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .18s}
+.sgo{margin-top:7px;width:100%;background:var(--ac);color:#fff;border:none;
+  border-radius:22px;padding:9px 0;font-size:.8rem;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .18s}
 .sgo:hover{opacity:.87}
-.spin{width:12px;height:12px;border:2px solid #fff3;border-top-color:#fff;border-radius:50%;animation:spin .65s linear infinite;display:none}
+.spin{width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;
+  border-radius:50%;animation:spin .65s linear infinite;display:none}
 .sgo.ld .spin{display:block}
 @keyframes spin{to{transform:rotate(360deg)}}
-.sec{padding:12px 13px 9px;border-bottom:1px solid var(--bd)}
-.sec-h{font-size:.63rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin-bottom:9px}
+.sec{padding:11px 12px 8px;border-bottom:1px solid var(--bd)}
+.sec-h{font-size:.62rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin-bottom:8px}
 .chips{display:flex;flex-wrap:wrap;gap:5px}
-.chip{padding:5px 11px;border-radius:18px;background:#252525;border:1px solid #333;font-size:.73rem;color:var(--mu);cursor:pointer;transition:all .15s;user-select:none}
+.chip{padding:5px 11px;border-radius:18px;background:#252525;border:1px solid #333;
+  font-size:.72rem;color:var(--mu);cursor:pointer;transition:all .15s;user-select:none}
 .chip:hover{border-color:#555;color:var(--tx)}.chip.on{background:var(--ac);border-color:var(--ac);color:#fff}
-.gp{display:flex;gap:5px;padding:11px 13px 5px}
-.gp button{flex:1;padding:6px 0;border-radius:9px;background:#252525;border:1px solid #333;font-size:.73rem;color:var(--mu);cursor:pointer;transition:all .15s}
+.gp{display:flex;gap:5px;padding:10px 12px 4px}
+.gp button{flex:1;padding:6px 0;border-radius:9px;background:#252525;border:1px solid #333;
+  font-size:.72rem;color:var(--mu);cursor:pointer;transition:all .15s}
 .gp button.on{background:var(--ac);border-color:var(--ac);color:#fff}
-.apply{display:block;margin:9px 13px 13px;padding:11px 0;background:var(--ac);color:#fff;border:none;border-radius:22px;cursor:pointer;font-size:.82rem;font-weight:600;transition:opacity .18s;width:calc(100% - 26px);text-align:center}
-.apply:hover{opacity:.87}
+.apply-btn{display:block;margin:8px 12px 12px;padding:11px 0;background:var(--ac);color:#fff;
+  border:none;border-radius:22px;cursor:pointer;font-size:.82rem;font-weight:600;
+  transition:opacity .18s;width:calc(100% - 24px);text-align:center}
+.apply-btn:hover{opacity:.87}
+
+/* MAIN */
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-.nav{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--sf);border-bottom:1px solid var(--bd);flex-shrink:0}
+.nav{display:flex;align-items:center;gap:10px;padding:10px 14px;
+  background:var(--sf);border-bottom:1px solid var(--bd);flex-shrink:0}
 .ntabs{display:flex;background:#252525;border-radius:22px;padding:3px;gap:2px}
-.ntab{padding:6px 16px;border-radius:18px;border:none;background:transparent;font-family:'DM Sans';font-size:.78rem;color:var(--mu);cursor:pointer;transition:all .18s;font-weight:500;white-space:nowrap}
+.ntab{padding:6px 15px;border-radius:18px;border:none;background:transparent;
+  font-family:'DM Sans';font-size:.78rem;color:var(--mu);cursor:pointer;transition:all .18s;font-weight:500}
 .ntab.on{background:var(--wh);color:#111;font-weight:700}
-.pills{display:flex;gap:5px;flex:1;overflow:hidden;flex-wrap:nowrap}
-.pill{padding:4px 10px;border-radius:13px;background:#2a2a2a;font-size:.7rem;color:var(--tx);display:flex;align-items:center;gap:4px;white-space:nowrap}
-.pill button{background:none;border:none;color:var(--mu);cursor:pointer;font-size:9px}
+.pills{display:flex;gap:5px;flex:1;overflow:hidden}
+.pill{padding:3px 9px;border-radius:12px;background:#2a2a2a;font-size:.7rem;
+  color:var(--tx);display:flex;align-items:center;gap:4px;white-space:nowrap}
+.pill button{background:none;border:none;color:var(--mu);cursor:pointer;font-size:9px;padding:0}
 .panel{display:none;flex:1;overflow-y:auto;padding:var(--gap)}.panel.on{display:block}
 .panel::-webkit-scrollbar{width:4px}.panel::-webkit-scrollbar-thumb{background:#2a2a2a;border-radius:4px}
+
 /* MASONRY */
 .pgrid{column-gap:var(--gap)}.pgrid.c1{columns:1}.pgrid.c2{columns:2}.pgrid.c3{columns:3}.pgrid.c4{columns:4}
-.pcard{break-inside:avoid;margin-bottom:var(--gap);border-radius:var(--rad);overflow:hidden;position:relative;cursor:pointer;background:#2a2a2a;transition:transform .18s}
+.pcard{break-inside:avoid;margin-bottom:var(--gap);border-radius:var(--rad);overflow:hidden;
+  position:relative;cursor:pointer;background:#2a2a2a;transition:transform .18s}
 .pcard:hover{transform:scale(1.015)}
 .pcard img{width:100%;display:block;object-fit:cover}
-.pcard.h-s img{height:200px}.pcard.h-m img{height:280px}.pcard.h-l img{height:360px}.pcard.h-xl img{height:440px}
-.pov{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.65) 0%,transparent 45%);opacity:0;transition:opacity .2s;border-radius:var(--rad)}
+.pcard.h-s img{height:200px}.pcard.h-m img{height:280px}
+.pcard.h-l img{height:360px}.pcard.h-xl img{height:440px}
+.pov{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.6) 0%,transparent 45%);
+  opacity:0;transition:opacity .2s;border-radius:var(--rad)}
 .pcard:hover .pov{opacity:1}
-.pstar{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:14px;border:1px solid rgba(255,255,255,.12)}
-.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:62vh;gap:10px}
-.empty .ico{font-size:2.8rem;opacity:.3}.empty p{font-size:.88rem;color:var(--mu)}
-.empty small{font-size:.75rem;color:#444;text-align:center;max-width:200px;line-height:1.5}
+.pstar{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);
+  border-radius:50%;width:30px;height:30px;display:flex;align-items:center;
+  justify-content:center;font-size:14px;border:1px solid rgba(255,255,255,.12)}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:60vh;gap:10px;opacity:.5}
+.empty .ico{font-size:2.8rem}.empty p{font-size:.88rem;color:var(--mu)}
+.empty small{font-size:.74rem;color:#444;text-align:center;max-width:200px;line-height:1.5}
 
-/* GALLERY - yeni yapı */
-.gal-wrap{display:flex;flex-direction:column;height:100%}
-.gal-gender-tabs{display:flex;gap:6px;padding:0 0 10px;flex-shrink:0;flex-wrap:wrap}
-.ggt{padding:6px 14px;border-radius:20px;border:1.5px solid var(–bd);background:#252525;font-size:.75rem;color:var(–mu);cursor:pointer;transition:all .15s;font-weight:500}
-.ggt.on{background:var(–ac);border-color:var(–ac);color:#fff;font-weight:700}
+/* GALLERY */
+.gal-gender-tabs{display:flex;gap:6px;padding:0 0 10px;flex-wrap:wrap;flex-shrink:0}
+.ggt{padding:6px 14px;border-radius:20px;border:1.5px solid var(--bd);background:#252525;
+  font-size:.75rem;color:var(--mu);cursor:pointer;transition:all .15s;font-weight:500}
+.ggt.on{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:700}
 .gal-sub-row{display:flex;align-items:center;gap:7px;margin-bottom:8px;flex-wrap:wrap}
-.sub-chips{display:flex;gap:5px;flex:1;overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px}
+.sub-chips{display:flex;gap:5px;flex:1;overflow-x:auto;padding-bottom:2px}
 .sub-chips::-webkit-scrollbar{height:2px}.sub-chips::-webkit-scrollbar-thumb{background:#333}
-.sch{padding:4px 11px;border-radius:16px;border:1px solid var(–bd);background:#252525;font-size:.7rem;color:var(–mu);cursor:pointer;white-space:nowrap;transition:all .15s}
-.sch.on{background:#333;border-color:#555;color:var(–tx)}
-.gbx{padding:7px 13px;border-radius:18px;border:none;background:var(–ac);color:#fff;font-size:.75rem;cursor:pointer;font-weight:600;transition:opacity .18s;white-space:nowrap;flex-shrink:0}
-.gbx:hover{opacity:.85}.gbx.s{background:#2a2a2a;color:var(–tx)}.gbx.s:hover{background:#333}
-.ulim{font-size:.7rem;color:var(–mu);margin-bottom:7px}
-.gg{display:grid;grid-template-columns:repeat(3,1fr);gap:var(–gap)}
-.gi{border-radius:11px;overflow:hidden;background:#2a2a2a;position:relative;cursor:pointer;aspect-ratio:3/4;transition:transform .17s}
+.sch{padding:4px 11px;border-radius:16px;border:1px solid var(--bd);background:#252525;
+  font-size:.7rem;color:var(--mu);cursor:pointer;white-space:nowrap;transition:all .15s}
+.sch.on{background:#333;border-color:#555;color:var(--tx)}
+.gbx{padding:7px 13px;border-radius:18px;border:none;background:var(--ac);color:#fff;
+  font-size:.75rem;cursor:pointer;font-weight:600;transition:opacity .18s;white-space:nowrap;flex-shrink:0}
+.gbx:hover{opacity:.85}.gbx.s{background:#2a2a2a;color:var(--tx)}.gbx.s:hover{background:#333}
+.ulim{font-size:.7rem;color:var(--mu);margin-bottom:7px}
+.gg{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)}
+.gi{border-radius:11px;overflow:hidden;background:#2a2a2a;position:relative;
+  cursor:pointer;aspect-ratio:3/4;transition:transform .17s}
 .gi:hover{transform:scale(1.025)}.gi img{width:100%;height:100%;object-fit:cover;display:block}
-.gi-alb{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.8));padding:18px 7px 5px;font-size:.6rem;color:#bbb;line-height:1.3}
-.gd{position:absolute;top:5px;right:5px;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);border:none;border-radius:50%;width:25px;height:25px;cursor:pointer;font-size:11px;display:none;align-items:center;justify-content:center;color:#fff}
-.gi:hover .gd{display:flex}
+.gi-lbl{position:absolute;bottom:0;left:0;right:0;
+  background:linear-gradient(transparent,rgba(0,0,0,.8));padding:18px 7px 5px;
+  font-size:.6rem;color:#bbb;line-height:1.3}
+.gi-more{position:absolute;top:5px;right:5px;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);
+  border:none;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:13px;
+  display:none;align-items:center;justify-content:center;color:#fff}
+.gi:hover .gi-more{display:flex}
 
-/* upload modal */
-.uz{border:2px dashed #2e2e2e;border-radius:13px;padding:28px;text-align:center;cursor:pointer;color:var(–mu);font-size:.8rem;transition:all .2s}
+/* UPLOAD ZONE */
+.uz{border:2px dashed #2e2e2e;border-radius:12px;padding:26px;text-align:center;
+  cursor:pointer;color:var(--mu);font-size:.8rem;transition:all .2s;margin-bottom:8px}
 .uz:hover{border-color:#444;background:#1e1e1e}.uz .ui{font-size:1.8rem;margin-bottom:5px}
 
 /* MODAL */
-.ov{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:500;padding:18px;backdrop-filter:blur(10px)}
-.md{background:var(–sf);border-radius:18px;padding:20px;max-width:380px;width:100%;box-shadow:0 20px 70px rgba(0,0,0,.7);border:1px solid var(–bd)}
-.md h3{font-size:1.05rem;font-weight:600;color:var(–wh);margin-bottom:11px}
-.md input,.md select{width:100%;padding:8px 13px;border:1px solid var(–bd);border-radius:11px;font-size:.82rem;outline:none;margin-bottom:9px;color:var(–tx);background:#252525;font-family:‘DM Sans’}
-.mdb{display:flex;gap:7px;margin-top:4px;flex-wrap:wrap}
-.mdb button{flex:1;padding:9px 0;border-radius:11px;border:none;font-size:.82rem;cursor:pointer;font-weight:600;font-family:‘DM Sans’;min-width:80px}
-.mdb .ok{background:var(–ac);color:#fff}.mdb .cc{background:#2a2a2a;color:var(–tx)}
-.mdb .mv{background:#1a3a5c;color:#7ec8e3}.mdb .cp{background:#1a3a1a;color:#7ec87e}
-.md img{width:100%;border-radius:11px;max-height:55vh;object-fit:contain}
-.md-photo-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-.md-photo-actions button{padding:10px 0;border-radius:11px;border:none;font-size:.78rem;cursor:pointer;font-weight:600;font-family:‘DM Sans’}
-.act-move{background:#1a3a5c;color:#7ec8e3}
-.act-copy{background:#1a3a1a;color:#7ec87e}
-.act-del{background:#3a1a1a;color:#e37e7e}
-.act-close{background:#2a2a2a;color:var(–tx)}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;
+  justify-content:center;z-index:500;padding:16px;backdrop-filter:blur(10px)}
+.md{background:var(--sf);border-radius:18px;padding:20px;max-width:380px;width:100%;
+  box-shadow:0 20px 70px rgba(0,0,0,.7);border:1px solid var(--bd);max-height:90vh;overflow-y:auto}
+.md h3{font-size:1rem;font-weight:600;color:var(--wh);margin-bottom:10px}
+.md input,.md select{width:100%;padding:8px 12px;border:1px solid var(--bd);border-radius:10px;
+  font-size:.82rem;outline:none;margin-bottom:8px;color:var(--tx);background:#252525;font-family:'DM Sans'}
+.mdb{display:flex;gap:7px;margin-top:6px;flex-wrap:wrap}
+.mdb button{flex:1;padding:9px 0;border-radius:10px;border:none;font-size:.8rem;
+  cursor:pointer;font-weight:600;font-family:'DM Sans';min-width:70px}
+.mdb .ok{background:var(--ac);color:#fff}.mdb .cc{background:#2a2a2a;color:var(--tx)}
+.md img{width:100%;border-radius:10px;max-height:52vh;object-fit:contain;margin-bottom:8px}
+.photo-acts{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+.photo-acts button{padding:9px 0;border-radius:10px;border:none;font-size:.78rem;cursor:pointer;font-weight:600}
+.pa-move{background:#0d2a40;color:#7ec8e3}.pa-copy{background:#0d2a0d;color:#7ec87e}
+.pa-del{background:#2a0d0d;color:#e37e7e}.pa-close{background:#2a2a2a;color:var(--tx)}
 
 /* TOAST */
-.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:#2c2c2c;color:var(–wh);padding:9px 20px;border-radius:22px;font-size:.78rem;z-index:1000;white-space:nowrap;border:1px solid #3a3a3a;animation:fup .28s ease;pointer-events:none}
-@keyframes fup{from{opacity:0;transform:translateX(-50%) translateY(9px)}}
+.toast{position:fixed;bottom:calc(28px + env(safe-area-inset-bottom));left:50%;
+  transform:translateX(-50%);background:#2c2c2c;color:var(--wh);padding:9px 20px;
+  border-radius:22px;font-size:.78rem;z-index:1000;white-space:nowrap;
+  border:1px solid #3a3a3a;animation:fup .28s ease;pointer-events:none}
+@keyframes fup{from{opacity:0;transform:translateX(-50%) translateY(8px)}}
 
 /* FAB */
-#mfab{display:none;position:fixed;bottom:20px;left:20px;z-index:200;background:var(–ac);color:#fff;border:none;border-radius:50%;width:46px;height:46px;font-size:1.15rem;cursor:pointer;box-shadow:0 4px 18px rgba(230,0,35,.45);align-items:center;justify-content:center}
+#mfab{display:none;position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));
+  left:16px;z-index:200;background:var(--ac);color:#fff;border:none;border-radius:50%;
+  width:48px;height:48px;font-size:1.2rem;cursor:pointer;
+  box-shadow:0 4px 18px rgba(230,0,35,.45);align-items:center;justify-content:center}
 #mbk{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:99}
-
-/* LOADING */
-#ls{position:fixed;inset:0;background:#111;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .5s}
-#ls.hide{opacity:0;pointer-events:none}
-.ls-shapes{position:absolute;inset:0;overflow:hidden}
-.ls-shape{position:absolute;font-size:1.8rem;animation:float 2.5s ease-in-out infinite}
-@keyframes float{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(-120vh) rotate(360deg);opacity:0}}
-.ls-logo{display:flex;align-items:center;gap:4px;margin-bottom:8px}
-.ls-p{width:56px;height:56px;background:#e60023;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:900;color:#fff;font-family:Georgia,serif;box-shadow:0 4px 20px rgba(230,0,35,.5)}
-.ls-text{font-size:3rem;font-weight:800;color:#fff;font-family:Georgia,serif;letter-spacing:-.03em}
-.ls-sub{font-size:.85rem;color:#666;letter-spacing:.1em;text-transform:uppercase}
 
 /* RESPONSIVE */
 @media(max-width:900px){
-.lp{position:fixed;left:0;top:0;bottom:0;z-index:100;transform:translateX(-100%);width:280px;min-width:280px}
-.lp.open{transform:translateX(0)}
-#mbk.open{display:block}
-#mfab{display:flex}
-.pills{display:none}
+  .lp{position:fixed;left:0;top:0;bottom:0;z-index:100;transform:translateX(-100%)}
+  .lp.open{transform:translateX(0)}
+  #mbk.open{display:block}
+  #mfab{display:flex}
+  .pills{display:none}
 }
 @media(max-width:600px){
-.pgrid.c3,.pgrid.c4{columns:2}
-.gg{grid-template-columns:repeat(2,1fr)}
-.nav{padding:8px 10px;gap:6px}
-.ntab{padding:5px 10px;font-size:.72rem}
-#mfab{bottom:calc(24px + env(safe-area-inset-bottom));left:14px;width:50px;height:50px;font-size:1.3rem}
-.ls-text{font-size:2.2rem}.ls-p{width:46px;height:46px;font-size:1.6rem}
+  .pgrid.c3,.pgrid.c4{columns:2}
+  .gg{grid-template-columns:repeat(2,1fr)}
+  .ntab{padding:5px 10px;font-size:.72rem}
 }
 </style>
 
 </head>
 <body>
 
+<!-- Loading -->
+
 <div id="ls">
-  <div class="ls-shapes" id="ls-shapes"></div>
+  <div class="ls-shapes" id="lss"></div>
   <div class="ls-logo">
     <div class="ls-p">K</div>
     <div class="ls-text">ombin</div>
@@ -175,7 +232,12 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
   <div class="ls-sub">Stil Asistanın</div>
 </div>
 
+<!-- App -->
+
 <div class="shell" id="app" style="display:none">
+
+  <!-- Left Panel -->
+
   <div class="lp" id="sidebar">
     <div class="logo">
       <div class="logo-i">👗</div>
@@ -185,7 +247,8 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
       <div class="sb">
         <textarea id="q" placeholder="Kadın kış spor kombin…" rows="3"></textarea>
         <button class="sgo" id="sgo" onclick="doSearch()">
-          <span class="spin"></span><span id="slbl">🔍 AI ile Ara</span>
+          <span class="spin"></span>
+          <span id="slbl">🔍 AI ile Ara</span>
         </button>
       </div>
       <div class="sec"><div class="sec-h">👗 Tarz</div>
@@ -213,16 +276,18 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
           <div class="chip" data-v="Kış">Kış</div>
         </div>
       </div>
-      <div class="sec-h" style="padding:12px 13px 6px">📐 Izgara</div>
+      <div class="sec-h" style="padding:10px 12px 5px">📐 Izgara</div>
       <div class="gp" id="gp">
         <button onclick="setGrid(1)">1</button>
         <button onclick="setGrid(2)">2</button>
         <button class="on" onclick="setGrid(3)">3</button>
         <button onclick="setGrid(4)">4</button>
       </div>
-      <button class="apply" onclick="applyFilters()">✨ Kombinleri Göster</button>
+      <button class="apply-btn" onclick="applyFilters()">✨ Kombinleri Göster</button>
     </div>
   </div>
+
+  <!-- Main -->
 
   <div class="main">
     <div class="nav">
@@ -236,29 +301,29 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
 ```
 <!-- Discover -->
 <div class="panel on" id="tab-discover">
-  <div class="empty" id="empty"><div class="ico">✨</div><p>Kombinler burada görünecek</p><small>Sol panelden filtre seç veya arama yap</small></div>
+  <div class="empty" id="empty">
+    <div class="ico">✨</div>
+    <p>Kombinler burada görünecek</p>
+    <small>Sol panelden filtre seç veya arama yap</small>
+  </div>
   <div class="pgrid c3" id="pgrid"></div>
 </div>
 
 <!-- Gallery -->
 <div class="panel" id="tab-gallery">
-  <div class="gal-wrap">
-    <!-- Cinsiyet ana sekmeleri -->
-    <div class="gal-gender-tabs">
-      <div class="ggt on" data-g="Kadın" onclick="setGenderTab(this,'Kadın')">👩 Kadın</div>
-      <div class="ggt" data-g="Erkek" onclick="setGenderTab(this,'Erkek')">👨 Erkek</div>
-      <div class="ggt" data-g="Kız Çocuk" onclick="setGenderTab(this,'Kız Çocuk')">👧 Kız Çocuk</div>
-      <div class="ggt" data-g="Erkek Çocuk" onclick="setGenderTab(this,'Erkek Çocuk')">👦 Erkek Çocuk</div>
-    </div>
-    <!-- Alt albüm satırı -->
-    <div class="gal-sub-row">
-      <div class="sub-chips" id="sub-chips"></div>
-      <button class="gbx s" id="add-sub-btn" onclick="openAddSubAlbum()">+ Alt Albüm</button>
-      <button class="gbx" onclick="openUpload()">📷 Ekle</button>
-    </div>
-    <div class="ulim" id="ulim">0 / 50 fotoğraf</div>
-    <div class="gg" id="gg"></div>
+  <div class="gal-gender-tabs">
+    <div class="ggt on" onclick="setGender(this,'Kadın')">👩 Kadın</div>
+    <div class="ggt" onclick="setGender(this,'Erkek')">👨 Erkek</div>
+    <div class="ggt" onclick="setGender(this,'Kız Çocuk')">👧 Kız Çocuk</div>
+    <div class="ggt" onclick="setGender(this,'Erkek Çocuk')">👦 Erkek Çocuk</div>
   </div>
+  <div class="gal-sub-row">
+    <div class="sub-chips" id="sub-chips"></div>
+    <button class="gbx s" onclick="openAddSub()">+ Alt Albüm</button>
+    <button class="gbx" onclick="openUpload()">📷 Ekle</button>
+  </div>
+  <div class="ulim" id="ulim">0 / 50 fotoğraf</div>
+  <div class="gg" id="gg"></div>
 </div>
 ```
 
@@ -271,130 +336,217 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
 <div id="mw"></div>
 
 <script>
-// ── API KEYS ──
-let CLAUDE_KEY='', GOOGLE_KEY='', GOOGLE_CX='';
-const UNSPLASH_KEY='C_yRkMGiiiPRusXG-gzBteoysa6WqUDjAjVEtDijJL8';
-let _userId=null;
+/* ═══════════════════════════════════════
+   STATE
+═══════════════════════════════════════ */
+let CLAUDE_KEY = '';
+let GOOGLE_KEY = '';
+let GOOGLE_CX  = '';
+const UNSPLASH_KEY = 'C_yRkMGiiiPRusXG-gzBteoysa6WqUDjAjVEtDijJL8';
 
-// ── ANA 4 CİNSİYET KATEGORİSİ ──
-const GENDERS_MAIN=['Kadın','Erkek','Kız Çocuk','Erkek Çocuk'];
+let grid = 3;
+let filters = { style: null, gender: null, season: null };
+let gallery = [];
+let subAlbums = { 'Kadın': [], 'Erkek': [], 'Kız Çocuk': [], 'Erkek Çocuk': [] };
+let curGender = 'Kadın';
+let curSub = '';
+let pinResults = [];
+let userId = null;
+const HEIGHTS = ['h-m','h-l','h-m','h-s','h-xl','h-m','h-l','h-s','h-m','h-xl','h-s','h-l','h-m','h-s'];
 
-// ── STATE ──
-let grid=3, filters={style:null,gender:null,season:null};
-let gallery=[], pinResults=[];
-let curGender='Kadın';   // seçili cinsiyet sekmesi
-let curSubAlbum='';      // seçili alt albüm ('': tümü)
-// Alt albümler: { 'Kadın': ['Günlük','Spor',...], 'Erkek': [...], ... }
-let subAlbums={'Kadın':[],'Erkek':[],'Kız Çocuk':[],'Erkek Çocuk':[]};
+/* ═══════════════════════════════════════
+   FIREBASE INIT
+═══════════════════════════════════════ */
+function initApp() {
+  _auth.signInAnonymously()
+    .then(() => { /* onAuthStateChanged handles the rest */ })
+    .catch(err => { console.warn('Auth error:', err); showApp(); });
 
-// ── LOCAL STORAGE ──
-function loadLocal(){
-  try{
-    const g=localStorage.getItem('kombin_gallery');
-    if(g) gallery=JSON.parse(g);
-    const s=localStorage.getItem('kombin_subalbums');
-    if(s) subAlbums=Object.assign(subAlbums,JSON.parse(s));
-  }catch(e){}
+  _auth.onAuthStateChanged(async user => {
+    if (!user) { showApp(); return; }
+    userId = user.uid;
+
+    // Remote Config
+    try {
+      await _rc.fetchAndActivate();
+      const ck = _rc.getValue('claude_api_key').asString();
+      const gk = _rc.getValue('google_api_key').asString();
+      const gc = _rc.getValue('google_cx').asString();
+      if (ck) CLAUDE_KEY = ck;
+      if (gk) GOOGLE_KEY = gk;
+      if (gc) GOOGLE_CX  = gc;
+    } catch(e) { console.warn('Remote config error:', e); }
+
+    // Firestore'dan galeriyi yükle
+    try {
+      const snap = await _db.collection('users').doc(userId).collection('gallery').get();
+      if (!snap.empty) {
+        gallery = [];
+        snap.forEach(d => gallery.push({ id: d.id, ...d.data() }));
+        gallery.forEach(g => {
+          if (!g.gender) g.gender = 'Kadın';
+          if (!g.subAlbum) g.subAlbum = '';
+        });
+      }
+      // Sub albümleri yükle
+      const saDoc = await _db.collection('users').doc(userId).collection('settings').doc('subAlbums').get();
+      if (saDoc.exists) {
+        const data = saDoc.data();
+        Object.keys(data).forEach(k => { if (subAlbums[k]) subAlbums[k] = data[k]; });
+      }
+    } catch(e) { console.warn('Firestore load error:', e); }
+
+    renderGallery();
+    renderSubChips();
+    showApp();
+  });
 }
-function saveLocal(){
-  try{
-    localStorage.setItem('kombin_gallery',JSON.stringify(gallery));
-    localStorage.setItem('kombin_subalbums',JSON.stringify(subAlbums));
-  }catch(e){}
+
+function showApp() {
+  const ls = document.getElementById('ls');
+  ls.classList.add('hide');
+  setTimeout(() => {
+    ls.style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+  }, 500);
 }
 
-// ── CHIP SEÇİMİ ──
-['cs','cg','cm'].forEach(id=>{
-  document.getElementById(id).addEventListener('click',e=>{
-    const chip=e.target.closest('.chip'); if(!chip)return;
-    const was=chip.classList.contains('on');
-    document.getElementById(id).querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
-    if(!was) chip.classList.add('on');
-    const key=id==='cs'?'style':id==='cg'?'gender':'season';
-    filters[key]=was?null:chip.dataset.v;
+/* ═══════════════════════════════════════
+   SAVE HELPERS
+═══════════════════════════════════════ */
+async function saveGalleryItem(item) {
+  if (!userId) return;
+  try {
+    await _db.collection('users').doc(userId).collection('gallery').doc(item.id).set(item);
+  } catch(e) { console.warn('Save error:', e); }
+}
+
+async function updateGalleryItem(id, data) {
+  if (!userId) return;
+  try {
+    await _db.collection('users').doc(userId).collection('gallery').doc(id).update(data);
+  } catch(e) { console.warn('Update error:', e); }
+}
+
+async function deleteGalleryItem(id) {
+  if (!userId) return;
+  try {
+    await _db.collection('users').doc(userId).collection('gallery').doc(id).delete();
+  } catch(e) { console.warn('Delete error:', e); }
+}
+
+async function saveSubAlbums() {
+  if (!userId) return;
+  try {
+    await _db.collection('users').doc(userId).collection('settings').doc('subAlbums').set(subAlbums);
+  } catch(e) { console.warn('SubAlbum save error:', e); }
+}
+
+/* ═══════════════════════════════════════
+   CHIP SELECTION
+═══════════════════════════════════════ */
+['cs','cg','cm'].forEach(id => {
+  document.getElementById(id).addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    const was = chip.classList.contains('on');
+    document.getElementById(id).querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+    if (!was) chip.classList.add('on');
+    const key = id === 'cs' ? 'style' : id === 'cg' ? 'gender' : 'season';
+    filters[key] = was ? null : chip.dataset.v;
     renderPills();
   });
 });
 
-function renderPills(){
-  const w=document.getElementById('pills'); w.innerHTML='';
-  Object.entries({style:filters.style,gender:filters.gender,season:filters.season}).forEach(([k,v])=>{
-    if(!v)return;
-    const d=document.createElement('div'); d.className='pill';
-    d.innerHTML=`${v} <button onclick="clearFilter('${k}')">✕</button>`;
+function renderPills() {
+  const w = document.getElementById('pills');
+  w.innerHTML = '';
+  [['style', filters.style], ['gender', filters.gender], ['season', filters.season]].forEach(([k, v]) => {
+    if (!v) return;
+    const d = document.createElement('div');
+    d.className = 'pill';
+    d.innerHTML = v + ' <button onclick="clearFilter(\'' + k + '\')">✕</button>';
     w.appendChild(d);
   });
 }
-function clearFilter(key){
-  filters[key]=null;
-  const id=key==='style'?'cs':key==='gender'?'cg':'cm';
-  document.getElementById(id).querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+
+function clearFilter(key) {
+  filters[key] = null;
+  const id = key === 'style' ? 'cs' : key === 'gender' ? 'cg' : 'cm';
+  document.getElementById(id).querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
   renderPills();
 }
-function setGrid(n){
-  grid=n;
-  document.getElementById('gp').querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on',i+1===n));
-  document.getElementById('pgrid').className=`pgrid c${n}`;
+
+function setGrid(n) {
+  grid = n;
+  document.getElementById('gp').querySelectorAll('button').forEach((b, i) => b.classList.toggle('on', i + 1 === n));
+  document.getElementById('pgrid').className = 'pgrid c' + n;
 }
-function switchTab(name,btn){
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('.ntab').forEach(b=>b.classList.remove('on'));
-  document.getElementById('tab-'+name).classList.add('on');
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.ntab').forEach(b => b.classList.remove('on'));
+  document.getElementById('tab-' + name).classList.add('on');
   btn.classList.add('on');
 }
-function toggleSide(){
+
+function toggleSide() {
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('mbk').classList.toggle('open');
 }
-function setLoading(on){
-  document.getElementById('sgo').classList.toggle('ld',on);
-  document.getElementById('slbl').textContent=on?'Aranıyor…':'🔍 AI ile Ara';
+
+function setLoading(on) {
+  document.getElementById('sgo').classList.toggle('ld', on);
+  document.getElementById('slbl').textContent = on ? 'Aranıyor…' : '🔍 AI ile Ara';
 }
 
-// ── ARAMA ──
-async function doSearch(){
-  const q=document.getElementById('q').value.trim();
-  if(!q){toast('Lütfen bir arama yazın');return;}
+/* ═══════════════════════════════════════
+   SEARCH
+═══════════════════════════════════════ */
+async function doSearch() {
+  const q = document.getElementById('q').value.trim();
+  if (!q) { toast('Lütfen bir arama yazın'); return; }
   setLoading(true);
-  try{
-    const r=await refineQuery(q);
-    await fetchImages(r, detectGenderFromQuery(q));
+  try {
+    const gHint = detectGender(q);
+    const refined = await refineQuery(q);
+    await fetchImages(refined, gHint);
     showDiscover();
-    if(window.innerWidth<900)toggleSide();
-  }catch(e){toast('Hata: '+e.message);}
-  finally{setLoading(false);}
+    if (window.innerWidth < 900) toggleSide();
+  } catch(e) { toast('Hata: ' + e.message); }
+  finally { setLoading(false); }
 }
 
-async function applyFilters(){
-  if(!filters.style&&!filters.gender&&!filters.season){toast('En az bir filtre seçin');return;}
-  const q=[filters.gender,filters.season,filters.style,'kombin'].filter(Boolean).join(' ');
+async function applyFilters() {
+  if (!filters.style && !filters.gender && !filters.season) { toast('En az bir filtre seçin'); return; }
+  const q = [filters.gender, filters.season, filters.style, 'kombin'].filter(Boolean).join(' ');
   setLoading(true);
-  try{
-    const r=await refineQuery(q);
-    await fetchImages(r, filters.gender);
+  try {
+    const refined = await refineQuery(q);
+    await fetchImages(refined, filters.gender);
     showDiscover();
-    if(window.innerWidth<900)toggleSide();
-  }catch(e){toast('Hata: '+e.message);}
-  finally{setLoading(false);}
+    if (window.innerWidth < 900) toggleSide();
+  } catch(e) { toast('Hata: ' + e.message); }
+  finally { setLoading(false); }
 }
 
-function showDiscover(){
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+function showDiscover() {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
   document.getElementById('tab-discover').classList.add('on');
-  document.querySelectorAll('.ntab').forEach((b,i)=>b.classList.toggle('on',i===0));
+  document.querySelectorAll('.ntab').forEach((b, i) => b.classList.toggle('on', i === 0));
 }
 
-function detectGenderFromQuery(q){
-  const l=q.toLowerCase();
-  if(l.includes('kadın')||l.includes('women')||l.includes('woman')) return 'Kadın';
-  if(l.includes('erkek çocuk')||l.includes('boys')) return 'Erkek Çocuk';
-  if(l.includes('kız çocuk')||l.includes('girls')) return 'Kız Çocuk';
-  if(l.includes('erkek')||l.includes('men')||l.includes('man')) return 'Erkek';
+function detectGender(q) {
+  const l = q.toLowerCase();
+  if (l.includes('erkek çocuk') || l.includes('boys')) return 'Erkek Çocuk';
+  if (l.includes('kız çocuk') || l.includes('girls')) return 'Kız Çocuk';
+  if (l.includes('kadın') || l.includes('women') || l.includes('woman')) return 'Kadın';
+  if (l.includes('erkek') || l.includes('men') || l.includes('man')) return 'Erkek';
   return null;
 }
 
-async function refineQuery(q){
-  const map=[
+async function refineQuery(q) {
+  const map = [
     ['erkek çocuk','boys kids'],['kız çocuk','girls kids'],
     ['kadın','women'],['erkek','men'],
     ['kış','winter'],['yaz','summer'],['ilkbahar','spring'],['sonbahar','fall'],
@@ -404,528 +556,490 @@ async function refineQuery(q){
     ['elbise','dress'],['pantolon','pants'],['etek','skirt'],
     ['ceket','jacket blazer'],['kazak','sweater'],['mont','coat']
   ];
-  let r=q.toLowerCase();
-  map.forEach(([tr,en])=>{r=r.replace(new RegExp(tr,'g'),en);});
-  r=r.replace(/\s+/g,' ').trim();
-  if(!r.includes('outfit')&&!r.includes('look')) r+=' outfit';
-  if(!r.includes('fashion')) r+=' fashion';
-  if(!CLAUDE_KEY) return r;
-  try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'x-api-key':CLAUDE_KEY,'anthropic-version':'2023-06-01','content-type':'application/json'},
-      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:50,
-        system:'Convert to precise English Unsplash fashion photo search query (4-7 words). Return ONLY the query.',
-        messages:[{role:'user',content:q}]})
+  let r = q.toLowerCase();
+  map.forEach(function(pair) { r = r.replace(new RegExp(pair[0], 'g'), pair[1]); });
+  r = r.replace(/\s+/g, ' ').trim();
+  if (!r.includes('outfit') && !r.includes('look')) r += ' outfit';
+  if (!r.includes('fashion')) r += ' fashion';
+  if (!CLAUDE_KEY) return r;
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': CLAUDE_KEY,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 50,
+        system: 'Convert to precise English Unsplash fashion photo search query (4-7 words). Return ONLY the query.',
+        messages: [{ role: 'user', content: q }]
+      })
     });
-    const d=await resp.json();
-    return d.content?.[0]?.text?.trim()||r;
-  }catch(e){return r;}
+    const d = await resp.json();
+    return (d.content && d.content[0] && d.content[0].text) ? d.content[0].text.trim() : r;
+  } catch(e) { return r; }
 }
 
-// ── GÖRSEL ÇEKME ──
-async function fetchImages(query, genderHint){
-  const genderGallery = genderHint ? gallery.filter(g=>g.gender===genderHint) : gallery;
+/* ═══════════════════════════════════════
+   IMAGE FETCHING
+═══════════════════════════════════════ */
+async function fetchImages(query, genderHint) {
+  const genderGal = genderHint ? gallery.filter(g => g.gender === genderHint) : gallery;
+  const [gImgs, uImgs] = await Promise.all([fetchGoogle(query), fetchUnsplash(query)]);
 
-  // Görsel arama + Vision analizi paralel başlat
-  const [gI, uI, galleryProfile] = await Promise.all([
-    fetchGoogle(query),
-    fetchUnsplash(query),
-    CLAUDE_KEY && genderGallery.length ? buildGalleryProfile(genderGallery) : Promise.resolve(null)
-  ]);
-
-  // Tekrarları önle — URL bazlı dedup
+  // Dedup
   const seen = new Set();
-  const all = [...gI, ...uI].filter(img=>{
+  const all = [];
+  gImgs.concat(uImgs).forEach(img => {
     const key = img.pid || img.url;
-    if(seen.has(key)) return false;
-    seen.add(key); return true;
+    if (!seen.has(key)) { seen.add(key); all.push(img); }
   });
 
-  // Pinterest sonuçlarını öne al, sonra Unsplash
-  const pinterest = all.filter(img=>img.isPinterest);
-  const unsplash  = all.filter(img=>!img.isPinterest);
-  const merged = [...pinterest, ...unsplash].slice(0,30);
+  // Pinterest first, then Unsplash
+  const merged = all.filter(x => x.isPinterest).concat(all.filter(x => !x.isPinterest)).slice(0, 30);
 
-  // Vision profiliyle skorla
-  const scored = merged.map(img=>({img, s:galScore(img, genderGallery, galleryProfile)}));
-  scored.sort((a,b)=>b.s-a.s);
-  pinResults = scored.map(x=>x.img);
+  // Score by gallery match
+  const scored = merged.map(img => ({ img: img, s: galScore(img, genderGal) }));
+  scored.sort(function(a, b) { return b.s - a.s; });
+  pinResults = scored.map(x => x.img);
   renderPins();
 }
 
-async function fetchGoogle(query){
-  if(!GOOGLE_KEY||!GOOGLE_CX)return[];
-  try{
-    // site:pinterest.com ile sadece Pinterest'ten çek
-    const pq=`site:pinterest.com ${query} outfit`;
-    const url=`https://www.googleapis.com/customsearch/v1?key=${GOOGLE_KEY}&cx=${GOOGLE_CX}&q=${encodeURIComponent(pq)}&searchType=image&num=10&imgSize=large&safe=active`;
-    const d=await(await fetch(url)).json();
-    const seen=new Set();
-    return(d.items||[]).filter(item=>{
-      if(seen.has(item.link))return false;
+async function fetchGoogle(query) {
+  if (!GOOGLE_KEY || !GOOGLE_CX) return [];
+  try {
+    const pq = 'site:pinterest.com ' + query + ' outfit';
+    const url = 'https://www.googleapis.com/customsearch/v1?key=' + GOOGLE_KEY +
+      '&cx=' + GOOGLE_CX + '&q=' + encodeURIComponent(pq) +
+      '&searchType=image&num=10&imgSize=large&safe=active';
+    const d = await (await fetch(url)).json();
+    const seen = new Set();
+    return (d.items || []).filter(item => {
+      if (seen.has(item.link)) return false;
       seen.add(item.link); return true;
-    }).map(item=>({
-      url:item.link,
-      thumb:item.image?.thumbnailLink||item.link,
-      title:'', tags:[], isPinterest:true
+    }).map(item => ({
+      url: item.link,
+      thumb: (item.image && item.image.thumbnailLink) ? item.image.thumbnailLink : item.link,
+      title: '', tags: [], isPinterest: true
     }));
-  }catch(e){return[];}
+  } catch(e) { return []; }
 }
 
-async function fetchUnsplash(query){
-  try{
-    const d=await(await fetch(
-      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=20&orientation=portrait&client_id=${UNSPLASH_KEY}&order_by=relevant`
+async function fetchUnsplash(query) {
+  try {
+    const d = await (await fetch(
+      'https://api.unsplash.com/search/photos?query=' + encodeURIComponent(query) +
+      '&per_page=20&orientation=portrait&client_id=' + UNSPLASH_KEY + '&order_by=relevant'
     )).json();
-    const seen=new Set();
-    return(d.results||[]).filter(p=>{
-      if(seen.has(p.id))return false;
+    const seen = new Set();
+    return (d.results || []).filter(p => {
+      if (seen.has(p.id)) return false;
       seen.add(p.id); return true;
-    }).map(p=>({
-      url:p.urls.regular, thumb:p.urls.small,
-      title:'', tags:(p.tags||[]).map(t=>t.title), pid:p.id
+    }).map(p => ({
+      url: p.urls.regular,
+      thumb: p.urls.small,
+      title: '',
+      tags: (p.tags || []).map(t => t.title),
+      pid: p.id
     }));
-  }catch(e){return[];}
+  } catch(e) { return []; }
 }
 
-// ── GALERİ GÖRSEL ANALİZİ (Claude Vision) ──
-const _visionCache = {};
-
-async function analyzeGalleryItem(item){
-  if(!CLAUDE_KEY||!item.url)return null;
-  if(_visionCache[item.id])return _visionCache[item.id];
-  try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'x-api-key':CLAUDE_KEY,'anthropic-version':'2023-06-01','content-type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-haiku-4-5-20251001',max_tokens:150,
-        system:'Analyze clothing photo. Return ONLY valid JSON: {"type":"shirt","color":"blue","style":"casual","keywords":["denim","casual","streetwear"]}',
-        messages:[{role:'user',content:[
-          {type:'image',source:{type:'url',url:item.url}},
-          {type:'text',text:'Analyze this clothing item. Return JSON only.'}
-        ]}]
-      })
-    });
-    const d=await resp.json();
-    const txt=(d.content?.[0]?.text||'{}').replace(/```json|```/g,'').trim();
-    const result=JSON.parse(txt);
-    _visionCache[item.id]=result;
-    return result;
-  }catch(e){return null;}
-}
-
-async function buildGalleryProfile(genderGallery){
-  if(!genderGallery?.length)return null;
-  const toAnalyze=genderGallery.slice(0,8);
-  const analyses=await Promise.all(toAnalyze.map(item=>analyzeGalleryItem(item)));
-  const valid=analyses.filter(Boolean);
-  if(!valid.length)return null;
-  return [...new Set(valid.flatMap(a=>[
-    a.type||'',a.style||'',...(a.keywords||[])
-  ].filter(Boolean).map(k=>k.toLowerCase())))];
-}
-
-function galScore(img,genderGallery,galleryProfile){
-  if(!genderGallery?.length)return 0;
-  const imgTags=(img.tags||[]).map(t=>t.toLowerCase());
-  if(!imgTags.length)return 0;
-  if(galleryProfile?.length){
-    let score=0;
-    galleryProfile.forEach(kw=>{
-      if(imgTags.some(t=>t.includes(kw)||kw.includes(t)))score++;
-    });
-    return score;
-  }
-  // Fallback keyword match
-  const kw=[...new Set((genderGallery||[]).flatMap(g=>(g.subAlbum||'').toLowerCase().split(' ')))].filter(k=>k.length>2);
-  const txt=imgTags.join(' ');
-  return kw.filter(k=>txt.includes(k)).length;
-}
-
-// ── PIN RENDER ──
-const HEIGHTS=['h-s','h-m','h-m','h-l','h-m','h-xl','h-s','h-l','h-m','h-s','h-xl','h-m','h-l','h-s'];
-function renderPins(){
-  const pg=document.getElementById('pgrid');
-  document.getElementById('empty').style.display=pinResults.length?'none':'flex';
-  pg.innerHTML='';
-  pinResults.forEach((img,i)=>{
-    const star=gallery.length>0&&galScore(img,gallery,null)>0;
-    const c=document.createElement('div');
-    c.className='pcard '+HEIGHTS[i%HEIGHTS.length];
-    c.innerHTML=`
-      <img src="${img.thumb||img.url}" loading="lazy" onerror="this.style.height='180px';this.style.background='#2a2a2a'"/>
-      <div class="pov"></div>
-      ${star?'<div class="pstar" title="Gardrobunuzla uyumlu!">⭐</div>':''}`;
-    c.onclick=()=>openPinModal(img);
-    pg.appendChild(c);
+function galScore(img, genderGal) {
+  if (!genderGal || !genderGal.length) return 0;
+  const imgTags = (img.tags || []).map(function(t) { return t.toLowerCase(); });
+  if (!imgTags.length) return 0;
+  const kw = [];
+  const seen = new Set();
+  genderGal.forEach(g => {
+    const words = (g.subAlbum || '').toLowerCase().split(' ');
+    words.forEach(w => { if (w.length > 2 && !seen.has(w)) { seen.add(w); kw.push(w); } });
   });
-  pg.className=`pgrid c${grid}`;
+  let score = 0;
+  kw.forEach(k => { if (imgTags.some(t => t.includes(k) || k.includes(t))) score++; });
+  return score;
 }
 
-function openPinModal(img){
-  showModal(`
-    <img src="${img.url}" onerror="this.style.display='none'"/>
-    <div class="mdb" style="margin-top:10px">
-      <button class="cc" onclick="closeModal()">Kapat</button>
-    </div>`);
+/* ═══════════════════════════════════════
+   RENDER PINS
+═══════════════════════════════════════ */
+function renderPins() {
+  const pg = document.getElementById('pgrid');
+  document.getElementById('empty').style.display = pinResults.length ? 'none' : 'flex';
+  pg.innerHTML = '';
+  pinResults.forEach(function(img, i) {
+    const star = gallery.length > 0 && galScore(img, gallery) > 0;
+    const card = document.createElement('div');
+    card.className = 'pcard ' + HEIGHTS[i % HEIGHTS.length];
+    card.innerHTML =
+      '<img src="' + (img.thumb || img.url) + '" loading="lazy" onerror="this.style.height=\'160px\';this.style.background=\'#2a2a2a\'"/>' +
+      '<div class="pov"></div>' +
+      (star ? '<div class="pstar" title="Gardrobunuzla uyumlu!">⭐</div>' : '');
+    (function(imgData) {
+      card.onclick = function() { openPinModal(imgData); };
+    })(img);
+    pg.appendChild(card);
+  });
+  pg.className = 'pgrid c' + grid;
 }
 
-// ── GALERİ ──
-function setGenderTab(el,gender){
-  curGender=gender; curSubAlbum='';
-  document.querySelectorAll('.ggt').forEach(g=>g.classList.remove('on'));
+function openPinModal(img) {
+  showModal(
+    '<img src="' + img.url + '" onerror="this.style.display=\'none\'"/>' +
+    '<div class="mdb" style="margin-top:10px"><button class="cc" onclick="closeModal()">Kapat</button></div>'
+  );
+}
+
+/* ═══════════════════════════════════════
+   GALLERY
+═══════════════════════════════════════ */
+function setGender(el, gender) {
+  curGender = gender;
+  curSub = '';
+  document.querySelectorAll('.ggt').forEach(g => g.classList.remove('on'));
   el.classList.add('on');
   renderSubChips();
   renderGallery();
 }
 
-function renderSubChips(){
-  const wrap=document.getElementById('sub-chips');
-  wrap.innerHTML='';
-  // "Tümü" chip
-  const all=document.createElement('div');
-  all.className='sch'+(curSubAlbum===''?' on':'');
-  all.textContent=`Tümü`;
-  all.onclick=()=>filterSub('',all);
-  wrap.appendChild(all);
-  // Alt albümler
-  (subAlbums[curGender]||[]).forEach(sa=>{
-    const ch=document.createElement('div');
-    ch.className='sch'+(curSubAlbum===sa?' on':'');
-    ch.innerHTML=`${sa} <span onclick="delSubAlbum('${sa}',event)" style="opacity:.5;margin-left:3px;cursor:pointer">✕</span>`;
-    ch.onclick=(e)=>{if(!e.target.tagName==='SPAN')filterSub(sa,ch);};
-    ch.querySelector('span').onclick=(e)=>{e.stopPropagation();delSubAlbum(sa);};
-    ch.addEventListener('click',e=>{if(e.target.tagName!=='SPAN'){filterSub(sa,ch);}});
+function renderSubChips() {
+  const wrap = document.getElementById('sub-chips');
+  wrap.innerHTML = '';
+  const allChip = document.createElement('div');
+  allChip.className = 'sch' + (curSub === '' ? ' on' : '');
+  allChip.textContent = 'Tümü';
+  allChip.onclick = function() { filterSub('', allChip); };
+  wrap.appendChild(allChip);
+  const subs = subAlbums[curGender] || [];
+  subs.forEach(function(sa) {
+    const ch = document.createElement('div');
+    ch.className = 'sch' + (curSub === sa ? ' on' : '');
+    const span = document.createElement('span');
+    span.textContent = sa;
+    ch.appendChild(span);
+    const x = document.createElement('span');
+    x.textContent = ' ✕';
+    x.style.cssText = 'opacity:.45;margin-left:3px;cursor:pointer';
+    x.onclick = function(e) { e.stopPropagation(); delSubAlbum(sa); };
+    ch.appendChild(x);
+    ch.onclick = function(e) { if (e.target !== x) filterSub(sa, ch); };
     wrap.appendChild(ch);
   });
 }
 
-function filterSub(sa,el){
-  curSubAlbum=sa;
-  document.querySelectorAll('.sch').forEach(c=>c.classList.remove('on'));
-  if(el) el.classList.add('on');
+function filterSub(sa, el) {
+  curSub = sa;
+  document.querySelectorAll('.sch').forEach(c => c.classList.remove('on'));
+  if (el) el.classList.add('on');
   renderGallery();
 }
 
-function renderGallery(){
-  const gg=document.getElementById('gg'); gg.innerHTML='';
-  let list=gallery.filter(g=>g.gender===curGender);
-  if(curSubAlbum) list=list.filter(g=>g.subAlbum===curSubAlbum);
-  list.forEach(item=>{
-    const d=document.createElement('div'); d.className='gi';
-    const label=item.subAlbum||item.gender||'';
-    d.innerHTML=`
-      <img src="${item.url}" loading="lazy" onerror="this.style.display='none'"/>
-      <div class="gi-alb">${label}</div>
-      <button class="gd" onclick="event.stopPropagation()">⋯</button>`;
-    d.querySelector('.gd').onclick=(e)=>{e.stopPropagation();openPhotoActions(item);};
-    d.onclick=()=>openPhotoActions(item);
+function renderGallery() {
+  const gg = document.getElementById('gg');
+  gg.innerHTML = '';
+  let list = gallery.filter(g => g.gender === curGender);
+  if (curSub) list = list.filter(g => g.subAlbum === curSub);
+  list.forEach(function(item) {
+    const d = document.createElement('div');
+    d.className = 'gi';
+    const img = document.createElement('img');
+    img.src = item.url;
+    img.loading = 'lazy';
+    img.onerror = function() { this.style.display = 'none'; };
+    d.appendChild(img);
+    const lbl = document.createElement('div');
+    lbl.className = 'gi-lbl';
+    lbl.textContent = item.subAlbum || item.gender || '';
+    d.appendChild(lbl);
+    const btn = document.createElement('button');
+    btn.className = 'gi-more';
+    btn.textContent = '⋯';
+    btn.onclick = function(e) { e.stopPropagation(); openPhotoActions(item); };
+    d.appendChild(btn);
+    d.onclick = function() { openPhotoActions(item); };
     gg.appendChild(d);
   });
-  document.getElementById('ulim').textContent=`${gallery.length} / 50 fotoğraf`;
+  document.getElementById('ulim').textContent = gallery.length + ' / 50 fotoğraf';
 }
 
-// ── FOTOĞRAF EYLEM MODALI ──
-function openPhotoActions(item){
-  const allAlbums=buildAlbumOptions(item);
-  showModal(`
-    <img src="${item.url}" onerror="this.style.display='none'" style="margin-bottom:10px"/>
-    <p style="font-size:.72rem;color:var(--mu);margin-bottom:10px">${item.gender}${item.subAlbum?' › '+item.subAlbum:''}</p>
-    <div class="md-photo-actions">
-      <button class="act-move" onclick="openMoveModal('${item.id}')">📦 Taşı</button>
-      <button class="act-copy" onclick="openCopyModal('${item.id}')">📋 Kopyala</button>
-      <button class="act-del" onclick="delItem('${item.id}')">🗑 Sil</button>
-      <button class="act-close" onclick="closeModal()">✕ Kapat</button>
-    </div>`);
+/* ═══════════════════════════════════════
+   PHOTO ACTIONS
+═══════════════════════════════════════ */
+function openPhotoActions(item) {
+  showModal(
+    '<img src="' + item.url + '" onerror="this.style.display=\'none\'"/>' +
+    '<p style="font-size:.72rem;color:var(--mu);margin-bottom:8px">' + item.gender + (item.subAlbum ? ' › ' + item.subAlbum : '') + '</p>' +
+    '<div class="photo-acts">' +
+    '<button class="pa-move" onclick="openMoveModal(\'' + item.id + '\')">📦 Taşı</button>' +
+    '<button class="pa-copy" onclick="openCopyModal(\'' + item.id + '\')">📋 Kopyala</button>' +
+    '<button class="pa-del" onclick="doDelItem(\'' + item.id + '\')">🗑 Sil</button>' +
+    '<button class="pa-close" onclick="closeModal()">✕ Kapat</button>' +
+    '</div>'
+  );
 }
 
-function buildAlbumOptions(excludeItem){
-  let opts='';
-  GENDERS_MAIN.forEach(g=>{
-    opts+=`<optgroup label="${g}">`;
-    opts+=`<option value="${g}|">Ana albüm (${g})</option>`;
-    (subAlbums[g]||[]).forEach(sa=>{
-      if(excludeItem&&excludeItem.gender===g&&excludeItem.subAlbum===sa) return;
-      opts+=`<option value="${g}|${sa}">${g} › ${sa}</option>`;
+function buildAlbumOpts(excludeId) {
+  const item = gallery.find(g => g.id === excludeId);
+  let opts = '';
+  ['Kadın','Erkek','Kız Çocuk','Erkek Çocuk'].forEach(function(g) {
+    opts += '<optgroup label="' + g + '">';
+    opts += '<option value="' + g + '|">Ana albüm (' + g + ')</option>';
+    (subAlbums[g] || []).forEach(function(sa) {
+      if (item && item.gender === g && item.subAlbum === sa) return;
+      opts += '<option value="' + g + '|' + sa + '">' + g + ' › ' + sa + '</option>';
     });
-    opts+=`</optgroup>`;
+    opts += '</optgroup>';
   });
   return opts;
 }
 
-function openMoveModal(id){
-  const item=gallery.find(g=>g.id===id); if(!item)return;
-  showModal(`
-    <h3>📦 Taşı</h3>
-    <select id="mv-sel">${buildAlbumOptions(item)}</select>
-    <div class="mdb">
-      <button class="ok" onclick="moveItem('${id}')">Taşı</button>
-      <button class="cc" onclick="closeModal()">İptal</button>
-    </div>`);
+function openMoveModal(id) {
+  showModal(
+    '<h3>📦 Taşı</h3>' +
+    '<select id="mv-sel">' + buildAlbumOpts(id) + '</select>' +
+    '<div class="mdb">' +
+    '<button class="ok" onclick="doMove(\'' + id + '\')">Taşı</button>' +
+    '<button class="cc" onclick="closeModal()">İptal</button>' +
+    '</div>'
+  );
 }
 
-async function moveItem(id){
-  const sel=document.getElementById('mv-sel')?.value; if(!sel)return;
-  const[g,sa]=sel.split('|');
-  const item=gallery.find(x=>x.id===id); if(!item)return;
-  item.gender=g; item.subAlbum=sa||'';
-  if(window._fb&&_userId){
-    try{
-      const{db,doc,updateDoc}=window._fb;
-      await updateDoc(doc(db,'users',_userId,'gallery',id),{gender:g,subAlbum:sa||''});
-    }catch(e){}
-  }
-  saveLocal(); closeModal(); renderGallery(); renderSubChips();
+async function doMove(id) {
+  const sel = document.getElementById('mv-sel');
+  if (!sel) return;
+  const parts = sel.value.split('|');
+  const g = parts[0], sa = parts[1] || '';
+  const item = gallery.find(x => x.id === id);
+  if (!item) return;
+  item.gender = g;
+  item.subAlbum = sa;
+  await updateGalleryItem(id, { gender: g, subAlbum: sa });
+  closeModal();
+  renderGallery();
+  renderSubChips();
   toast('Taşındı ✓');
 }
 
-function openCopyModal(id){
-  const item=gallery.find(g=>g.id===id); if(!item)return;
-  showModal(`
-    <h3>📋 Kopyala</h3>
-    <select id="cp-sel">${buildAlbumOptions(null)}</select>
-    <div class="mdb">
-      <button class="ok" onclick="copyItem('${id}')">Kopyala</button>
-      <button class="cc" onclick="closeModal()">İptal</button>
-    </div>`);
+function openCopyModal(id) {
+  showModal(
+    '<h3>📋 Kopyala</h3>' +
+    '<select id="cp-sel">' + buildAlbumOpts(null) + '</select>' +
+    '<div class="mdb">' +
+    '<button class="ok" onclick="doCopy(\'' + id + '\')">Kopyala</button>' +
+    '<button class="cc" onclick="closeModal()">İptal</button>' +
+    '</div>'
+  );
 }
 
-async function copyItem(id){
-  if(gallery.length>=50){toast('50 fotoğraf sınırına ulaştınız');return;}
-  const sel=document.getElementById('cp-sel')?.value; if(!sel)return;
-  const[g,sa]=sel.split('|');
-  const item=gallery.find(x=>x.id===id); if(!item)return;
-  const newItem={...item,id:'c'+Date.now(),gender:g,subAlbum:sa||''};
+async function doCopy(id) {
+  if (gallery.length >= 50) { toast('50 fotoğraf sınırına ulaştınız'); return; }
+  const sel = document.getElementById('cp-sel');
+  if (!sel) return;
+  const parts = sel.value.split('|');
+  const g = parts[0], sa = parts[1] || '';
+  const item = gallery.find(x => x.id === id);
+  if (!item) return;
+  const newId = 'c' + Date.now();
+  const newItem = { id: newId, url: item.url, gender: g, subAlbum: sa, name: item.name || 'foto', createdAt: Date.now() };
   gallery.push(newItem);
-  if(window._fb&&_userId){
-    try{
-      const{db,collection,addDoc}=window._fb;
-      const docRef=await addDoc(collection(db,'users',_userId,'gallery'),{url:newItem.url,gender:g,subAlbum:sa||'',name:newItem.name,createdAt:Date.now()});
-      newItem.id=docRef.id;
-    }catch(e){}
-  }
-  saveLocal(); closeModal(); renderGallery(); renderSubChips();
+  await saveGalleryItem(newItem);
+  closeModal();
+  renderGallery();
+  renderSubChips();
   toast('Kopyalandı ✓');
 }
 
-async function delItem(id){
-  if(!confirm('Bu fotoğrafı sil?'))return;
-  if(window._fb&&_userId){
-    try{const{db,deleteDoc,doc}=window._fb;await deleteDoc(doc(db,'users',_userId,'gallery',id));}catch(e){}
-  }
-  gallery=gallery.filter(g=>g.id!==id);
-  saveLocal(); closeModal(); renderGallery(); renderSubChips();
+async function doDelItem(id) {
+  if (!confirm('Bu fotoğrafı sil?')) return;
+  gallery = gallery.filter(g => g.id !== id);
+  await deleteGalleryItem(id);
+  closeModal();
+  renderGallery();
+  renderSubChips();
   toast('Silindi');
 }
 
-// ── ALT ALBÜM ──
-function openAddSubAlbum(){
-  showModal(`
-    <h3>➕ Alt Albüm Ekle</h3>
-    <p style="font-size:.78rem;color:var(--mu);margin-bottom:8px">${curGender} kategorisi altına</p>
-    <input id="san" placeholder="Albüm adı…"/>
-    <div class="mdb">
-      <button class="ok" onclick="addSubAlbum()">Oluştur</button>
-      <button class="cc" onclick="closeModal()">İptal</button>
-    </div>`);
-  setTimeout(()=>document.getElementById('san')?.focus(),50);
+/* ═══════════════════════════════════════
+   SUB ALBUMS
+═══════════════════════════════════════ */
+function openAddSub() {
+  showModal(
+    '<h3>➕ Alt Albüm</h3>' +
+    '<p style="font-size:.75rem;color:var(--mu);margin-bottom:8px">' + curGender + ' kategorisi altına</p>' +
+    '<input id="san" placeholder="Albüm adı…"/>' +
+    '<div class="mdb">' +
+    '<button class="ok" onclick="doAddSub()">Oluştur</button>' +
+    '<button class="cc" onclick="closeModal()">İptal</button>' +
+    '</div>'
+  );
+  setTimeout(function() { const el = document.getElementById('san'); if (el) el.focus(); }, 60);
 }
 
-function addSubAlbum(){
-  const name=document.getElementById('san')?.value.trim(); if(!name)return;
-  if(!subAlbums[curGender]) subAlbums[curGender]=[];
-  if(!subAlbums[curGender].includes(name)) subAlbums[curGender].push(name);
-  saveLocal(); closeModal(); renderSubChips();
+async function doAddSub() {
+  const el = document.getElementById('san');
+  if (!el) return;
+  const name = el.value.trim();
+  if (!name) return;
+  if (!subAlbums[curGender]) subAlbums[curGender] = [];
+  if (!subAlbums[curGender].includes(name)) subAlbums[curGender].push(name);
+  await saveSubAlbums();
+  closeModal();
+  renderSubChips();
   toast('Alt albüm oluşturuldu');
 }
 
-function delSubAlbum(sa){
-  if(!confirm(`"${sa}" albümünü sil? İçindeki fotoğraflar ana albüme taşınır.`))return;
-  // Fotoğrafları ana albüme taşı
-  gallery.forEach(g=>{if(g.gender===curGender&&g.subAlbum===sa) g.subAlbum='';});
-  subAlbums[curGender]=subAlbums[curGender].filter(x=>x!==sa);
-  if(curSubAlbum===sa) curSubAlbum='';
-  saveLocal(); renderSubChips(); renderGallery();
+async function delSubAlbum(sa) {
+  if (!confirm('"' + sa + '" albümünü sil? İçindeki fotoğraflar ana albüme taşınır.')) return;
+  const affected = gallery.filter(g => g.gender === curGender && g.subAlbum === sa);
+  for (const item of affected) {
+    item.subAlbum = '';
+    await updateGalleryItem(item.id, { subAlbum: '' });
+  }
+  subAlbums[curGender] = subAlbums[curGender].filter(x => x !== sa);
+  if (curSub === sa) curSub = '';
+  await saveSubAlbums();
+  renderSubChips();
+  renderGallery();
   toast('Albüm silindi');
 }
 
-// ── FOTOĞRAF YÜKLEME ──
-function openUpload(){
-  if(gallery.length>=50){toast('50 fotoğraf sınırına ulaştınız');return;}
-  const subOpts=(subAlbums[curGender]||[]).map(s=>`<option value="${s}">${s}</option>`).join('');
-  showModal(`
-    <h3>📷 Fotoğraf Ekle</h3>
-    <p style="font-size:.75rem;color:var(--mu);margin-bottom:8px">Kategori: <strong style="color:var(--wh)">${curGender}</strong></p>
-    ${subOpts?`<select id="up-sub"><option value="">Ana albüm</option>${subOpts}</select>`:'<input type="hidden" id="up-sub" value=""/>'}
-    <div class="uz" onclick="document.getElementById('fi').click()">
-      <div class="ui">📁</div><p>Tıklayarak seç</p>
-      <p style="font-size:.7rem;margin-top:3px;color:#555">Otomatik sıkıştırılır</p>
-    </div>
-    <input type="file" id="fi" accept="image/*" multiple style="display:none" onchange="handleUpload(event)"/>
-    <div class="mdb"><button class="cc" onclick="closeModal()">İptal</button></div>`);
+/* ═══════════════════════════════════════
+   UPLOAD
+═══════════════════════════════════════ */
+function openUpload() {
+  if (gallery.length >= 50) { toast('50 fotoğraf sınırına ulaştınız'); return; }
+  const subs = subAlbums[curGender] || [];
+  const subOpts = subs.map(function(s) { return '<option value="' + s + '">' + s + '</option>'; }).join('');
+  showModal(
+    '<h3>📷 Fotoğraf Ekle</h3>' +
+    '<p style="font-size:.75rem;color:var(--mu);margin-bottom:8px">Kategori: <strong style="color:var(--wh)">' + curGender + '</strong></p>' +
+    (subOpts ? '<select id="up-sub"><option value="">Ana albüm</option>' + subOpts + '</select>' : '<input type="hidden" id="up-sub" value=""/>') +
+    '<div class="uz" onclick="document.getElementById(\'fi\').click()">' +
+    '<div class="ui">📁</div><p>Tıklayarak seç</p>' +
+    '<p style="font-size:.7rem;margin-top:3px;color:#555">Otomatik sıkıştırılır</p>' +
+    '</div>' +
+    '<input type="file" id="fi" accept="image/*" multiple style="display:none" onchange="handleUpload(event)"/>' +
+    '<div class="mdb"><button class="cc" onclick="closeModal()">İptal</button></div>'
+  );
 }
 
-async function handleUpload(e){
-  const files=Array.from(e.target.files);
-  const subAlbum=document.getElementById('up-sub')?.value||'';
-  closeModal(); let added=0;
-  for(const file of files){
-    if(gallery.length>=50)break;
-    try{
-      if(window._fb&&_userId){
-        const{storage,ref,uploadBytes,getDownloadURL,db,collection,addDoc}=window._fb;
-        const blob=await compressImg(file,800,.72);
-        const sRef=ref(storage,`users/${_userId}/gallery/${Date.now()}_${file.name}`);
-        await uploadBytes(sRef,blob);
-        const url=await getDownloadURL(sRef);
-        const docRef=await addDoc(collection(db,'users',_userId,'gallery'),
-          {url,gender:curGender,subAlbum,name:file.name,createdAt:Date.now()});
-        gallery.push({id:docRef.id,url,gender:curGender,subAlbum,name:file.name});
-        added++; continue;
-      }
-      // Local fallback
-      const url=await toBase64(file);
-      gallery.push({id:'u'+Date.now()+added,url,gender:curGender,subAlbum,name:file.name});
+async function handleUpload(e) {
+  const files = Array.from(e.target.files);
+  const subAlbum = (document.getElementById('up-sub') && document.getElementById('up-sub').value) || '';
+  closeModal();
+  let added = 0;
+  const uploadToast = showToast('Yükleniyor…', true);
+  for (const file of files) {
+    if (gallery.length >= 50) break;
+    try {
+      // Firebase Storage'a yükle
+      const blob = await compressToBlob(file, 800, 0.72);
+      const path = 'users/' + userId + '/gallery/' + Date.now() + '_' + file.name;
+      const storageRef = _storage.ref(path);
+      await storageRef.put(blob);
+      const url = await storageRef.getDownloadURL();
+      const item = {
+        id: 'img_' + Date.now() + '_' + added,
+        url: url,
+        gender: curGender,
+        subAlbum: subAlbum,
+        name: file.name,
+        createdAt: Date.now()
+      };
+      gallery.push(item);
+      await saveGalleryItem(item);
       added++;
-    }catch(err){toast('Hata: '+err.message);}
+    } catch(err) {
+      console.warn('Upload error:', err);
+      toast('Yükleme hatası: ' + err.message);
+    }
   }
-  saveLocal(); renderGallery(); renderSubChips();
-  if(added)toast(`${added} fotoğraf eklendi ✓`);
+  if (uploadToast) uploadToast.remove();
+  renderGallery();
+  renderSubChips();
+  if (added > 0) toast(added + ' fotoğraf yüklendi ✓');
 }
 
-async function compressImg(file,maxW,q){
-  return new Promise(res=>{
-    const img=new Image(),url=URL.createObjectURL(file);
-    img.onload=()=>{
-      const s=Math.min(1,maxW/img.width);
-      const c=document.createElement('canvas');
-      c.width=img.width*s;c.height=img.height*s;
-      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-      c.toBlob(b=>res(b),'image/jpeg',q);URL.revokeObjectURL(url);
-    };img.src=url;
+function compressToBlob(file, maxW, quality) {
+  return new Promise(function(resolve, reject) {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = function() {
+      const scale = Math.min(1, maxW / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(function(blob) {
+        URL.revokeObjectURL(url);
+        resolve(blob);
+      }, 'image/jpeg', quality);
+    };
+    img.onerror = function() { reject(new Error('Görsel okunamadı')); };
+    img.src = url;
   });
 }
-function toBase64(file){
-  return new Promise((res,rej)=>{
-    const r=new FileReader();
-    r.onload=e=>res(e.target.result);
-    r.onerror=()=>rej(new Error('Dosya okunamadı'));
-    r.readAsDataURL(file);
-  });
+
+/* ═══════════════════════════════════════
+   MODAL / TOAST
+═══════════════════════════════════════ */
+function showModal(html) {
+  document.getElementById('mw').innerHTML =
+    '<div class="ov" onclick="if(event.target.classList.contains(\'ov\'))closeModal()">' +
+    '<div class="md">' + html + '</div></div>';
+}
+function closeModal() { document.getElementById('mw').innerHTML = ''; }
+
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(function() { el.remove(); }, 2800);
 }
 
-// ── MODAL / TOAST ──
-function showModal(html){
-  document.getElementById('mw').innerHTML=`<div class="ov" onclick="if(event.target.classList.contains('ov'))closeModal()"><div class="md">${html}</div></div>`;
-}
-function closeModal(){document.getElementById('mw').innerHTML='';}
-function toast(msg){
-  const el=document.createElement('div'); el.className='toast'; el.textContent=msg;
-  document.body.appendChild(el); setTimeout(()=>el.remove(),2800);
+function showToast(msg, persist) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  if (!persist) setTimeout(function() { el.remove(); }, 2800);
+  return el;
 }
 
-document.getElementById('q').addEventListener('keydown',e=>{
-  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSearch();}
+/* ═══════════════════════════════════════
+   KEYBOARD
+═══════════════════════════════════════ */
+document.getElementById('q').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doSearch(); }
 });
 
-// ── FIREBASE INIT ──
-async function initFirebase(){
-  if(!window._fb)return;
-  const{auth,signInAnonymously,onAuthStateChanged,remoteConfig,fetchAndActivate,getValue,db,collection,getDocs}=window._fb;
-  try{await signInAnonymously(auth);}catch(e){}
-  onAuthStateChanged(auth,async user=>{
-    if(!user)return;
-    _userId=user.uid;
-    try{
-      await Promise.race([fetchAndActivate(remoteConfig),new Promise((_,r)=>setTimeout(()=>r(),4000))]);
-      const ck=getValue(remoteConfig,'claude_api_key').asString();
-      const gk=getValue(remoteConfig,'google_api_key').asString();
-      const gc=getValue(remoteConfig,'google_cx').asString();
-      if(ck)CLAUDE_KEY=ck; if(gk)GOOGLE_KEY=gk; if(gc)GOOGLE_CX=gc;
-    }catch(e){}
-    // Firestore'dan galeriyi yükle
-    try{
-      const snap=await getDocs(collection(db,'users',_userId,'gallery'));
-      const fbGallery=[];
-      snap.forEach(d=>fbGallery.push({id:d.id,...d.data()}));
-      if(fbGallery.length>0){
-        // Firebase'de veri var, onu kullan
-        gallery=fbGallery;
-        // Eski format uyumluluğu
-        gallery.forEach(g=>{
-          if(!g.gender&&g.album){
-            if(g.album==='Kadın'||g.album==='Günlük'||g.album==='Özel Gün') g.gender='Kadın';
-            else if(g.album==='Erkek') g.gender='Erkek';
-            else if(g.album==='Kız Çocuk') g.gender='Kız Çocuk';
-            else if(g.album==='Erkek Çocuk') g.gender='Erkek Çocuk';
-            else g.gender='Kadın';
-            g.subAlbum=g.album!==g.gender?g.album:'';
-          }
-          if(!g.gender) g.gender='Kadın';
-          if(!g.subAlbum) g.subAlbum='';
-        });
-        // LocalStorage'ı da güncelle (offline yedek)
-        saveLocal();
-      } else if(gallery.length>0){
-        // Firebase boş ama localStorage'da veri var → Firebase'e aktar
-        toast('Fotoğraflarınız yükleniyor…');
-        for(const item of gallery){
-          try{
-            const{addDoc}=window._fb;
-            const docRef=await addDoc(collection(db,'users',_userId,'gallery'),{
-              url:item.url, gender:item.gender||'Kadın',
-              subAlbum:item.subAlbum||'', name:item.name||'foto',
-              createdAt:Date.now()
-            });
-            item.id=docRef.id;
-          }catch(e){}
-        }
-        saveLocal();
-        toast('Fotoğraflar buluta aktarıldı ✓');
-      }
-    }catch(e){
-      console.warn('Firestore error:',e);
-      // Firebase başarısız → localStorage kullan
-      loadLocal();
-    }
-    renderGallery(); renderSubChips();
-  });
-}
-
-// ── BOOT ──
-loadLocal();         // Önce localStorage'dan yükle (hızlı)
-renderGallery();     // Hemen göster
-renderSubChips();
-initFirebase();      // Arka planda Firebase senkronize et
-
-// Loading screen
-(function(){
-  const shapes=['⭐','🌸','💫','✨','🌟','💕','🎀','👗','💎','🌺','⚡','🦋'];
-  const wrap=document.getElementById('ls-shapes'); if(!wrap)return;
-  for(let i=0;i<18;i++){
-    const el=document.createElement('div'); el.className='ls-shape';
-    el.textContent=shapes[Math.floor(Math.random()*shapes.length)];
-    el.style.left=Math.random()*100+'vw';
-    el.style.top=(60+Math.random()*40)+'vh';
-    el.style.animationDelay=(Math.random()*2)+'s';
-    el.style.animationDuration=(1.5+Math.random()*2)+'s';
-    el.style.fontSize=(1+Math.random()*1.5)+'rem';
+/* ═══════════════════════════════════════
+   LOADING SCREEN ANIMATION
+═══════════════════════════════════════ */
+(function() {
+  const shapes = ['⭐','🌸','💫','✨','🌟','💕','🎀','👗','💎','🌺','⚡','🦋'];
+  const wrap = document.getElementById('lss');
+  if (!wrap) return;
+  for (let i = 0; i < 16; i++) {
+    const el = document.createElement('div');
+    el.className = 'ls-shape';
+    el.textContent = shapes[Math.floor(Math.random() * shapes.length)];
+    el.style.left = (Math.random() * 90 + 5) + 'vw';
+    el.style.top = (60 + Math.random() * 35) + 'vh';
+    el.style.fontSize = (1 + Math.random() * 1.4) + 'rem';
+    el.style.animationDelay = (Math.random() * 1.5) + 's';
+    el.style.animationDuration = (1.8 + Math.random() * 1.5) + 's';
     wrap.appendChild(el);
   }
-  setTimeout(()=>{
-    const ls=document.getElementById('ls');
-    if(ls){
-      ls.classList.add('hide');
-      setTimeout(()=>{
-        ls.style.display='none';
-        const app=document.getElementById('app');
-        if(app) app.style.display='flex';
-      },500);
-    }
-  },1800);
 })();
+
+/* ═══════════════════════════════════════
+   BOOT
+═══════════════════════════════════════ */
+initApp();
 </script>
 
 </body>
