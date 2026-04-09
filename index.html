@@ -39,7 +39,7 @@ const _db      = firebase.firestore();
 const _storage = firebase.storage();
 const _rc      = firebase.remoteConfig();
 _rc.settings.minimumFetchIntervalMillis = 3600000;
-_rc.defaultConfig = { claude_api_key:'', google_api_key:'', google_cx:'', unsplash_access_key:'' };
+_rc.defaultConfig = { claude_api_key:'', google_api_key:'', google_cx:'' };
 </script>
 
 <style>
@@ -342,7 +342,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
 let CLAUDE_KEY = '';
 let GOOGLE_KEY = '';
 let GOOGLE_CX  = '';
-const UNSPLASH_KEY = 'C_yRkMGiiiPRusXG-gzBteoysa6WqUDjAjVEtDijJL8';
+// Unsplash kaldırıldı - sadece Google/Pinterest kullanılıyor
 
 let grid = 3;
 let filters = { style: null, gender: null, season: null };
@@ -601,20 +601,25 @@ async function refineQuery(q) {
 ═══════════════════════════════════════ */
 async function fetchImages(query, genderHint) {
   const genderGal = genderHint ? gallery.filter(g => g.gender === genderHint) : gallery;
-  const [gImgs, uImgs] = await Promise.all([fetchGoogle(query), fetchUnsplash(query)]);
+
+  // Sadece Google/Pinterest
+  const imgs = await fetchGoogle(query);
+
+  if (imgs.length === 0) {
+    toast('Sonuç bulunamadı. Google API key kontrol edin.');
+    renderPins();
+    return;
+  }
 
   // Dedup
   const seen = new Set();
-  const all = [];
-  gImgs.concat(uImgs).forEach(img => {
-    const key = img.pid || img.url;
-    if (!seen.has(key)) { seen.add(key); all.push(img); }
+  const merged = [];
+  imgs.forEach(img => {
+    const key = img.url;
+    if (!seen.has(key)) { seen.add(key); merged.push(img); }
   });
 
-  // Pinterest first, then Unsplash
-  const merged = all.filter(x => x.isPinterest).concat(all.filter(x => !x.isPinterest)).slice(0, 30);
-
-  // Score by gallery match
+  // Score by gallery match - galeri uyumluları üste
   const scored = merged.map(img => ({ img: img, s: galScore(img, genderGal) }));
   scored.sort(function(a, b) { return b.s - a.s; });
   pinResults = scored.map(x => x.img);
@@ -622,44 +627,40 @@ async function fetchImages(query, genderHint) {
 }
 
 async function fetchGoogle(query) {
-  if (!GOOGLE_KEY || !GOOGLE_CX) return [];
+  if (!GOOGLE_KEY || !GOOGLE_CX) {
+    console.warn('Google API key veya CX eksik');
+    return [];
+  }
   try {
-    const pq = 'site:pinterest.com ' + query + ' outfit';
-    const url = 'https://www.googleapis.com/customsearch/v1?key=' + GOOGLE_KEY +
-      '&cx=' + GOOGLE_CX + '&q=' + encodeURIComponent(pq) +
-      '&searchType=image&num=10&imgSize=large&safe=active';
-    const d = await (await fetch(url)).json();
+    // Pinterest'e özel arama - moda kelimeleri ekle
+    const pq = query + ' fashion outfit style';
+    // İki sayfa çek (10+10=20 sonuç)
+    const [page1, page2] = await Promise.all([
+      fetch('https://www.googleapis.com/customsearch/v1?key=' + GOOGLE_KEY +
+        '&cx=' + GOOGLE_CX + '&q=' + encodeURIComponent(pq) +
+        '&searchType=image&num=10&start=1&imgSize=large&safe=active&imgType=photo').then(r=>r.json()),
+      fetch('https://www.googleapis.com/customsearch/v1?key=' + GOOGLE_KEY +
+        '&cx=' + GOOGLE_CX + '&q=' + encodeURIComponent(pq) +
+        '&searchType=image&num=10&start=11&imgSize=large&safe=active&imgType=photo').then(r=>r.json())
+    ]);
+    const allItems = [...(page1.items||[]), ...(page2.items||[])];
     const seen = new Set();
-    return (d.items || []).filter(item => {
+    return allItems.filter(item => {
       if (seen.has(item.link)) return false;
       seen.add(item.link); return true;
     }).map(item => ({
       url: item.link,
       thumb: (item.image && item.image.thumbnailLink) ? item.image.thumbnailLink : item.link,
-      title: '', tags: [], isPinterest: true
+      title: item.title || '',
+      tags: (item.title || '').toLowerCase().split(/[\s,]+/).filter(w => w.length > 2)
     }));
-  } catch(e) { return []; }
+  } catch(e) {
+    console.warn('Google fetch error:', e);
+    return [];
+  }
 }
 
-async function fetchUnsplash(query) {
-  try {
-    const d = await (await fetch(
-      'https://api.unsplash.com/search/photos?query=' + encodeURIComponent(query) +
-      '&per_page=20&orientation=portrait&client_id=' + UNSPLASH_KEY + '&order_by=relevant'
-    )).json();
-    const seen = new Set();
-    return (d.results || []).filter(p => {
-      if (seen.has(p.id)) return false;
-      seen.add(p.id); return true;
-    }).map(p => ({
-      url: p.urls.regular,
-      thumb: p.urls.small,
-      title: '',
-      tags: (p.tags || []).map(t => t.title),
-      pid: p.id
-    }));
-  } catch(e) { return []; }
-}
+// fetchUnsplash kaldırıldı
 
 function galScore(img, genderGal) {
   if (!genderGal || !genderGal.length) return 0;
