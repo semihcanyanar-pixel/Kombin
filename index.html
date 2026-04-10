@@ -349,15 +349,13 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
     <div id="key-status-bar"></div>
 
     <div class="setting-item">
-      <label>Google Custom Search API Key</label>
+      <label>SerpAPI Key</label>
       <input type="password" id="inp-gkey" placeholder="AIzaSy..."/>
-      <div class="hint">Google Cloud Console → Kombin projesi → Credentials</div>
+      <div class="hint">serpapi.com → Dashboard → Your Private API Key</div>
     </div>
 
-    <div class="setting-item">
-      <label>Google Custom Search CX (Engine ID)</label>
-      <input type="text" id="inp-cx" placeholder="xxxxxxxxxxxxxxxxx"/>
-      <div class="hint">programmablesearchengine.google.com → Search engine ID</div>
+    <div class="setting-item" style="display:none">
+      <input type="hidden" id="inp-cx" value=""/>
     </div>
 
     <div class="setting-item">
@@ -566,7 +564,7 @@ function setLoading(on) {
 async function doSearch() {
   const q = document.getElementById('q').value.trim();
   if (!q) { toast('Lütfen bir arama yazın'); return; }
-  if (!GOOGLE_KEY || !GOOGLE_CX) {
+  if (!GOOGLE_KEY) {
     toast('⚙️ Önce API key girin!');
     switchTab('settings', document.querySelectorAll('.ntab')[2]);
     return;
@@ -584,7 +582,7 @@ async function doSearch() {
 
 async function applyFilters() {
   if (!filters.style && !filters.gender && !filters.season) { toast('En az bir filtre seçin'); return; }
-  if (!GOOGLE_KEY || !GOOGLE_CX) {
+  if (!GOOGLE_KEY) {
     toast('⚙️ Önce API key girin!');
     switchTab('settings', document.querySelectorAll('.ntab')[2]);
     return;
@@ -669,25 +667,20 @@ async function fetchImages(query, genderHint) {
 }
 
 async function fetchGoogle(query) {
-  if (!GOOGLE_KEY || !GOOGLE_CX) return [];
+  if (!GOOGLE_KEY) return [];
   try {
-    const pq = query + ' outfit fashion style';
-    const [p1, p2] = await Promise.all([
-      fetch('https://www.googleapis.com/customsearch/v1?key=' + GOOGLE_KEY +
-        '&cx=' + GOOGLE_CX + '&q=' + encodeURIComponent(pq) +
-        '&searchType=image&num=10&start=1&imgSize=large&safe=active').then(r => r.json()).catch(() => ({})),
-      fetch('https://www.googleapis.com/customsearch/v1?key=' + GOOGLE_KEY +
-        '&cx=' + GOOGLE_CX + '&q=' + encodeURIComponent(pq) +
-        '&searchType=image&num=10&start=11&imgSize=large&safe=active').then(r => r.json()).catch(() => ({}))
-    ]);
-    const items = [...(p1.items||[]), ...(p2.items||[])];
-    return items.map(item => ({
-      url: item.link,
-      thumb: (item.image && item.image.thumbnailLink) ? item.image.thumbnailLink : item.link,
+    const pq = 'site:pinterest.com ' + query + ' outfit fashion';
+    const url = 'https://serpapi.com/search.json?engine=google_images' +
+      '&q=' + encodeURIComponent(pq) +
+      '&num=20&safe=active&api_key=' + GOOGLE_KEY;
+    const d = await fetch(url).then(r => r.json()).catch(() => ({}));
+    return (d.images_results || []).map(item => ({
+      url: item.original,
+      thumb: item.thumbnail,
       title: item.title || '',
       tags: (item.title || '').toLowerCase().split(/[\s,]+/).filter(w => w.length > 2)
     }));
-  } catch(e) { console.warn('Google err:', e); return []; }
+  } catch(e) { console.warn('SerpAPI err:', e); return []; }
 }
 
 function galScore(img, genderGal) {
