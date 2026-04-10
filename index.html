@@ -728,6 +728,23 @@ let _wardrobeItems = null;
 let _wardrobeGender = null;
 let _pinAnalysisCache = {};
 
+// URL'yi base64'e çevir
+async function urlToBase64(url) {
+  try {
+    const resp = await fetch(url);
+    const blob = await resp.blob();
+    return new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const b64 = reader.result.split(',')[1];
+        res({ data: b64, mediaType: blob.type || 'image/jpeg' });
+      };
+      reader.onerror = rej;
+      reader.readAsDataURL(blob);
+    });
+  } catch(e) { return null; }
+}
+
 // Gardrobu analiz et → spesifik kıyafet listesi çıkar
 async function buildWardrobeItems(genderGal) {
   if (!CLAUDE_KEY || !genderGal || !genderGal.length) return null;
@@ -735,14 +752,25 @@ async function buildWardrobeItems(genderGal) {
   if (_wardrobeItems && _wardrobeGender === gender) return _wardrobeItems;
   
   try {
-    const sample = genderGal.slice(0, 8);
+    const sample = genderGal.slice(0, 6);
     const imageContent = [];
-    sample.forEach(item => {
-      imageContent.push({ type: 'image', source: { type: 'url', url: item.url } });
-    });
+    
+    // Her görseli base64'e çevir
+    for (const item of sample) {
+      const b64 = await urlToBase64(item.url);
+      if (b64) {
+        imageContent.push({ 
+          type: 'image', 
+          source: { type: 'base64', media_type: b64.mediaType, data: b64.data } 
+        });
+      }
+    }
+    
+    if (imageContent.length === 0) return null;
+    
     imageContent.push({
       type: 'text',
-      text: 'These are wardrobe clothing photos. List each specific clothing item you see. Return ONLY a JSON array of specific items like: ["black leather jacket","baggy blue jeans","white sneakers","beige trench coat","black boots"]. Be specific with color and type. Max 30 items.'
+      text: 'These are wardrobe clothing photos. List each specific clothing item you see. Return ONLY a JSON array like: ["black leather jacket","baggy blue jeans","white sneakers","beige trench coat"]. Be specific with color and type. Max 30 items.'
     });
     
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
@@ -754,7 +782,7 @@ async function buildWardrobeItems(genderGal) {
     const txt = (d.content && d.content[0] ? d.content[0].text : '[]').replace(/```json|```/g,'').trim();
     _wardrobeItems = JSON.parse(txt);
     _wardrobeGender = gender;
-    console.log('Wardrobe items:', _wardrobeItems);
+    console.log('✅ Wardrobe items:', _wardrobeItems);
     return _wardrobeItems;
   } catch(e) { console.warn('Wardrobe analysis err:', e); return null; }
 }
@@ -764,14 +792,20 @@ async function analyzePinImage(imgUrl) {
   if (!CLAUDE_KEY) return null;
   if (_pinAnalysisCache[imgUrl]) return _pinAnalysisCache[imgUrl];
   try {
+    // Pinterest/web görsellerini base64'e çevir
+    const b64 = await urlToBase64(imgUrl);
+    const imageSource = b64 
+      ? { type: 'base64', media_type: b64.mediaType, data: b64.data }
+      : { type: 'url', url: imgUrl };
+    
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'x-api-key': CLAUDE_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001', max_tokens: 300,
         messages: [{ role: 'user', content: [
-          { type: 'image', source: { type: 'url', url: imgUrl } },
-          { type: 'text', text: 'List every clothing item worn in this outfit photo. Use the same format as a wardrobe inventory: color + type. Return ONLY a JSON array like: ["black leather jacket","baggy blue jeans","white sneakers","beige trench coat"]. Include ALL visible pieces (top, bottom, shoes, outerwear, accessories).' }
+          { type: 'image', source: imageSource },
+          { type: 'text', text: 'List every clothing item worn in this outfit. Return ONLY a JSON array like: ["black leather jacket","baggy blue jeans","white sneakers"]. Be specific with color and type.' }
         ]}]
       })
     });
@@ -779,8 +813,9 @@ async function analyzePinImage(imgUrl) {
     const txt = (d.content && d.content[0] ? d.content[0].text : '[]').replace(/```json|```/g,'').trim();
     const items = JSON.parse(txt);
     _pinAnalysisCache[imgUrl] = items;
+    console.log('📸 Pin analyzed:', items);
     return items;
-  } catch(e) { return null; }
+  } catch(e) { console.warn('Pin analysis err:', e); return null; }
 }
 
 // Gardrop kıyafeti ile kombin kıyafeti eşleşiyor mu?
