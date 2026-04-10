@@ -664,16 +664,20 @@ async function fetchImages(query, genderHint) {
     seen.add(img.url); return true;
   }).slice(0, 30);
 
-  // Her görseli galeri profiliyle skorla
+  // Önce title bazlı hızlı skor
   const scored = merged.map(img => ({ 
     img: img, 
     s: galScore(img, genderGal, galleryProfile) 
   }));
   scored.sort((a, b) => b.s - a.s);
-  // Skoru direkt img objesine yaz
   scored.forEach(item => { item.img._score = item.s; });
   pinResults = scored.map(x => x.img);
   renderPins();
+  
+  // Sonra Claude ile görsel analizi yaparak rozeti güncelle (arka planda)
+  if (CLAUDE_KEY && galleryProfile && galleryProfile.length) {
+    analyzeAndUpdateBadges(pinResults, galleryProfile);
+  }
 }
 
 async function fetchGoogle(query) {
@@ -693,80 +697,174 @@ async function fetchGoogle(query) {
   } catch(e) { console.warn('Fetch err:', e); return []; }
 }
 
-// Galeri profili cache
-let _galleryProfile = null;
-let _galleryProfileGender = null;
+// Gardrop kıyafet listesi cache
+let _wardrobeItems = null;
+let _wardrobeGender = null;
+let _pinAnalysisCache = {};
 
-async function buildGalleryProfile(genderGal) {
+// Gardrobu analiz et → spesifik kıyafet listesi çıkar
+async function buildWardrobeItems(genderGal) {
   if (!CLAUDE_KEY || !genderGal || !genderGal.length) return null;
-  if (_galleryProfile && _galleryProfileGender === (genderGal[0] && genderGal[0].gender)) return _galleryProfile;
+  const gender = genderGal[0] && genderGal[0].gender;
+  if (_wardrobeItems && _wardrobeGender === gender) return _wardrobeItems;
+  
   try {
-    const sample = genderGal.slice(0, 6);
-    const imageContent = sample.map(item => ({
-      type: 'image',
-      source: { type: 'url', url: item.url }
-    }));
+    const sample = genderGal.slice(0, 8);
+    const imageContent = [];
+    sample.forEach(item => {
+      imageContent.push({ type: 'image', source: { type: 'url', url: item.url } });
+    });
     imageContent.push({
       type: 'text',
-      text: 'Analyze these wardrobe clothing items. Return ONLY a JSON array of style keywords like: ["casual","denim","streetwear","blue","oversized","minimalist"]. Max 20 keywords.'
+      text: 'These are wardrobe clothing photos. List each specific clothing item you see. Return ONLY a JSON array of specific items like: ["black leather jacket","baggy blue jeans","white sneakers","beige trench coat","black boots"]. Be specific with color and type. Max 30 items.'
     });
+    
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'x-api-key': CLAUDE_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 200, messages: [{ role: 'user', content: imageContent }] })
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 400, messages: [{ role: 'user', content: imageContent }] })
     });
     const d = await resp.json();
     const txt = (d.content && d.content[0] ? d.content[0].text : '[]').replace(/```json|```/g,'').trim();
-    _galleryProfile = JSON.parse(txt);
-    _galleryProfileGender = genderGal[0] && genderGal[0].gender;
-    return _galleryProfile;
+    _wardrobeItems = JSON.parse(txt);
+    _wardrobeGender = gender;
+    console.log('Wardrobe items:', _wardrobeItems);
+    return _wardrobeItems;
+  } catch(e) { console.warn('Wardrobe analysis err:', e); return null; }
+}
+
+// Kombin görselini analiz et → içindeki kıyafetleri çıkar
+async function analyzePinImage(imgUrl) {
+  if (!CLAUDE_KEY) return null;
+  if (_pinAnalysisCache[imgUrl]) return _pinAnalysisCache[imgUrl];
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': CLAUDE_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001', max_tokens: 200,
+        messages: [{ role: 'user', content: [
+          { type: 'image', source: { type: 'url', url: imgUrl } },
+          { type: 'text', text: 'List the specific clothing items in this outfit photo. Return ONLY a JSON array like: ["black leather jacket","baggy jeans","white sneakers"]. Be specific with color and type.' }
+        ]}]
+      })
+    });
+    const d = await resp.json();
+    const txt = (d.content && d.content[0] ? d.content[0].text : '[]').replace(/```json|```/g,'').trim();
+    const items = JSON.parse(txt);
+    _pinAnalysisCache[imgUrl] = items;
+    return items;
   } catch(e) { return null; }
 }
 
+// Gardrop kıyafeti ile kombin kıyafeti eşleşiyor mu?
+function itemsMatch(wardrobeItem, pinItem) {
+  const w = wardrobeItem.toLowerCase();
+  const p = pinItem.toLowerCase();
+  
+  // Renk ve kıyafet tipi her ikisinde de var mı?
+  const colors = ['black','white','grey','gray','navy','blue','red','green','brown','beige','cream','khaki','camel','burgundy','siyah','beyaz','lacivert','mavi','kahve','krem','bej'];
+  const types = ['jacket','coat','pants','jeans','shirt','tshirt','t-shirt','sweater','hoodie','dress','skirt','boots','sneakers','shoes','bag','ceket','palto','pantolon','kot','gömlek','kazak','elbise','etek','bot','ayakkabı'];
+  
+  // Aynı renk var mı?
+  const wColor = colors.find(c => w.includes(c));
+  const pColor = colors.find(c => p.includes(c));
+  const colorMatch = wColor && pColor && wColor === pColor;
+  
+  // Aynı kıyafet tipi var mı?
+  const wType = types.find(t => w.includes(t));
+  const pType = types.find(t => p.includes(t));
+  const typeMatch = wType && pType && (wType === pType || 
+    (wType === 'jeans' && pType === 'pants') ||
+    (wType === 'kot' && (pType === 'jeans' || pType === 'pants')) ||
+    (wType === 'bot' && pType === 'boots') ||
+    (wType === 'ceket' && pType === 'jacket') ||
+    (wType === 'palto' && pType === 'coat') ||
+    (wType === 'kazak' && pType === 'sweater')
+  );
+  
+  // Her iki kelime grubunda ortak kelimeler
+  const wWords = w.split(' ').filter(x => x.length > 2);
+  const pWords = p.split(' ').filter(x => x.length > 2);
+  const commonWords = wWords.filter(w => pWords.some(p => p.includes(w) || w.includes(p)));
+  
+  return (colorMatch && typeMatch) || commonWords.length >= 2;
+}
+
+async function buildGalleryProfile(genderGal) {
+  return await buildWardrobeItems(genderGal);
+}
+
 function galScore(img, genderGal, galleryProfile) {
+  // galleryProfile burada wardrobeItems (spesifik kıyafet listesi)
+  // Görsel analizi async olduğu için burada sadece title/tag bazlı fallback
   if (!genderGal || !genderGal.length) return 0;
-  const imgTags = (img.tags || []).map(t => t.toLowerCase());
+  if (!galleryProfile || !galleryProfile.length) return 0;
+  
   const imgTitle = (img.title || '').toLowerCase();
-  const imgSource = (img.source || '').toLowerCase();
-  const allText = imgTags.join(' ') + ' ' + imgTitle + ' ' + imgSource;
-
-  // AI profili varsa kullan (Claude key girildiyse)
-  if (galleryProfile && galleryProfile.length) {
-    let score = 0;
-    galleryProfile.forEach(kw => {
-      if (allText.includes(kw.toLowerCase())) score += 2;
-    });
-    return score;
-  }
-
-  // Fallback: cinsiyet + tarz eşleşmesi
-  // Cinsiyet bazlı anahtar kelimeler
-  const genderKw = {
-    'Kadın': ['women','woman','female','lady','ladies','girl','feminine','kadın'],
-    'Erkek': ['men','man','male','guy','masculine','erkek'],
-    'Kız Çocuk': ['girl','girls','kids','children','child','kız'],
-    'Erkek Çocuk': ['boy','boys','kids','children','child','erkek']
-  };
-  const curGenderKw = genderKw[genderGal[0] && genderGal[0].gender] || [];
+  const allText = imgTitle + ' ' + (img.tags || []).join(' ').toLowerCase();
+  
   let score = 0;
-  curGenderKw.forEach(k => { if (allText.includes(k)) score++; });
-
-  // Alt albüm keyword match
-  const kw = new Set();
-  genderGal.forEach(g => {
-    (g.subAlbum || '').toLowerCase().split(' ').forEach(w => { if (w.length > 2) kw.add(w); });
-    (g.name || '').toLowerCase().split(/[\s_.-]+/).forEach(w => { if (w.length > 2) kw.add(w); });
+  galleryProfile.forEach(wardrobeItem => {
+    const w = wardrobeItem.toLowerCase();
+    const wWords = w.split(' ').filter(x => x.length > 2);
+    const matchCount = wWords.filter(word => allText.includes(word)).length;
+    if (matchCount >= 2) score += 3; // güçlü eşleşme
+    else if (matchCount === 1) score += 1; // zayıf eşleşme
   });
-  kw.forEach(k => { if (allText.includes(k)) score += 2; });
-
-  // Temel stil kelimeleri varsa +1
-  const styleKw = ['outfit','fashion','style','look','wear','kombin','ootd','casual','streetwear','formal'];
-  styleKw.forEach(k => { if (allText.includes(k)) score += 0.5; });
-
+  
   return score;
 }
 
 // ── RENDER PINS ──
+// Arka planda görselleri analiz et ve rozetleri güncelle
+async function analyzeAndUpdateBadges(imgs, wardrobeItems) {
+  // Sadece ilk 10 görseli analiz et (API limiti)
+  const toAnalyze = imgs.slice(0, 10);
+  for (const img of toAnalyze) {
+    try {
+      const pinItems = await analyzePinImage(img.url);
+      if (!pinItems || !pinItems.length) continue;
+      
+      // Gardrop ile eşleşme kontrolü
+      let matchCount = 0;
+      wardrobeItems.forEach(wardrobeItem => {
+        pinItems.forEach(pinItem => {
+          if (itemsMatch(wardrobeItem, pinItem)) matchCount++;
+        });
+      });
+      
+      const prevScore = img._score || 0;
+      img._score = matchCount > 0 ? matchCount * 5 : prevScore;
+      
+      // Rozeti güncelle
+      updatePinBadge(img);
+    } catch(e) { continue; }
+  }
+}
+
+function updatePinBadge(img) {
+  // DOM'da bu görselin kartını bul ve rozeti güncelle
+  const pg = document.getElementById('pgrid');
+  if (!pg) return;
+  const cards = pg.querySelectorAll('.pcard');
+  cards.forEach(card => {
+    const imgEl = card.querySelector('img');
+    if (imgEl && imgEl.src === img.url) {
+      const existing = card.querySelector('.pstar');
+      if (img._score > 0 && !existing) {
+        const badge = document.createElement('div');
+        badge.className = 'pstar';
+        badge.title = 'Gardrobunuzla uyumlu!';
+        badge.textContent = '⭐';
+        card.appendChild(badge);
+      } else if (img._score === 0 && existing) {
+        existing.remove();
+      }
+    }
+  });
+}
+
 function renderPins() {
   const pg = document.getElementById('pgrid');
   document.getElementById('empty').style.display = pinResults.length ? 'none' : 'flex';
