@@ -742,10 +742,10 @@ async function analyzePinImage(imgUrl) {
       method: 'POST',
       headers: { 'x-api-key': CLAUDE_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001', max_tokens: 200,
+        model: 'claude-haiku-4-5-20251001', max_tokens: 300,
         messages: [{ role: 'user', content: [
           { type: 'image', source: { type: 'url', url: imgUrl } },
-          { type: 'text', text: 'List the specific clothing items in this outfit photo. Return ONLY a JSON array like: ["black leather jacket","baggy jeans","white sneakers"]. Be specific with color and type.' }
+          { type: 'text', text: 'List every clothing item worn in this outfit photo. Use the same format as a wardrobe inventory: color + type. Return ONLY a JSON array like: ["black leather jacket","baggy blue jeans","white sneakers","beige trench coat"]. Include ALL visible pieces (top, bottom, shoes, outerwear, accessories).' }
         ]}]
       })
     });
@@ -762,33 +762,37 @@ function itemsMatch(wardrobeItem, pinItem) {
   const w = wardrobeItem.toLowerCase();
   const p = pinItem.toLowerCase();
   
-  // Renk ve kıyafet tipi her ikisinde de var mı?
-  const colors = ['black','white','grey','gray','navy','blue','red','green','brown','beige','cream','khaki','camel','burgundy','siyah','beyaz','lacivert','mavi','kahve','krem','bej'];
-  const types = ['jacket','coat','pants','jeans','shirt','tshirt','t-shirt','sweater','hoodie','dress','skirt','boots','sneakers','shoes','bag','ceket','palto','pantolon','kot','gömlek','kazak','elbise','etek','bot','ayakkabı'];
+  const colors = ['black','white','grey','gray','navy','blue','red','green','brown','beige','cream','khaki','camel','burgundy','dark','light','olive','pink','purple','orange','yellow','siyah','beyaz','gri','lacivert','mavi','kırmızı','yeşil','kahve','bej','krem','bordo'];
   
-  // Aynı renk var mı?
+  const typeGroups = [
+    ['jacket','blazer','ceket'],
+    ['coat','overcoat','palto','kaban'],
+    ['pants','jeans','trousers','pantolon','kot'],
+    ['shirt','blouse','gömlek'],
+    ['tshirt','t-shirt','tee','tişört'],
+    ['sweater','knitwear','hoodie','sweatshirt','kazak','hırka'],
+    ['dress','elbise'],
+    ['skirt','etek'],
+    ['boots','bot'],
+    ['sneakers','trainers','ayakkabı','spor ayakkabı'],
+    ['shoes','loafers','heels','sandals'],
+    ['bag','çanta'],
+    ['scarf','atkı','eşarp'],
+    ['hat','cap','şapka','bere']
+  ];
+  
+  // Renk eşleşmesi
   const wColor = colors.find(c => w.includes(c));
   const pColor = colors.find(c => p.includes(c));
   const colorMatch = wColor && pColor && wColor === pColor;
   
-  // Aynı kıyafet tipi var mı?
-  const wType = types.find(t => w.includes(t));
-  const pType = types.find(t => p.includes(t));
-  const typeMatch = wType && pType && (wType === pType || 
-    (wType === 'jeans' && pType === 'pants') ||
-    (wType === 'kot' && (pType === 'jeans' || pType === 'pants')) ||
-    (wType === 'bot' && pType === 'boots') ||
-    (wType === 'ceket' && pType === 'jacket') ||
-    (wType === 'palto' && pType === 'coat') ||
-    (wType === 'kazak' && pType === 'sweater')
-  );
+  // Kıyafet tipi eşleşmesi (aynı gruba ait mı?)
+  const wGroup = typeGroups.find(g => g.some(t => w.includes(t)));
+  const pGroup = typeGroups.find(g => g.some(t => p.includes(t)));
+  const typeMatch = wGroup && pGroup && wGroup === pGroup;
   
-  // Her iki kelime grubunda ortak kelimeler
-  const wWords = w.split(' ').filter(x => x.length > 2);
-  const pWords = p.split(' ').filter(x => x.length > 2);
-  const commonWords = wWords.filter(w => pWords.some(p => p.includes(w) || w.includes(p)));
-  
-  return (colorMatch && typeMatch) || commonWords.length >= 2;
+  // Hem renk hem tip eşleşmesi gerekli
+  return colorMatch && typeMatch;
 }
 
 async function buildGalleryProfile(genderGal) {
@@ -817,27 +821,20 @@ function galScore(img, genderGal, galleryProfile) {
 }
 
 // ── RENDER PINS ──
-// Arka planda görselleri analiz et ve rozetleri güncelle
+// Arka planda görselleri analiz et — TÜM parçalar gardropta varsa rozet
 async function analyzeAndUpdateBadges(imgs, wardrobeItems) {
-  // Sadece ilk 10 görseli analiz et (API limiti)
   const toAnalyze = imgs.slice(0, 10);
   for (const img of toAnalyze) {
     try {
       const pinItems = await analyzePinImage(img.url);
       if (!pinItems || !pinItems.length) continue;
       
-      // Gardrop ile eşleşme kontrolü
-      let matchCount = 0;
-      wardrobeItems.forEach(wardrobeItem => {
-        pinItems.forEach(pinItem => {
-          if (itemsMatch(wardrobeItem, pinItem)) matchCount++;
-        });
+      // KOMBİNDEKİ HER PARÇA gardropta var mı?
+      const allMatch = pinItems.every(pinItem => {
+        return wardrobeItems.some(wardrobeItem => itemsMatch(wardrobeItem, pinItem));
       });
       
-      const prevScore = img._score || 0;
-      img._score = matchCount > 0 ? matchCount * 5 : prevScore;
-      
-      // Rozeti güncelle
+      img._score = allMatch ? 10 : 0;
       updatePinBadge(img);
     } catch(e) { continue; }
   }
