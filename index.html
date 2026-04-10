@@ -669,9 +669,7 @@ async function fetchGoogle(query) {
   if (!GOOGLE_KEY) return [];
   try {
     const pq = 'site:pinterest.com ' + query + ' outfit fashion';
-    const url = 'https://serpapi.com/search.json?engine=google_images' +
-      '&q=' + encodeURIComponent(pq) +
-      '&num=20&safe=active&api_key=' + GOOGLE_KEY;
+    const url = 'https://kombinai.semihcanyanar.workers.dev?q=' + encodeURIComponent(pq) + '&key=' + GOOGLE_KEY;
     const d = await fetch(url).then(r => r.json()).catch(() => ({}));
     return (d.images_results || []).map(item => ({
       url: item.original,
@@ -679,7 +677,7 @@ async function fetchGoogle(query) {
       title: item.title || '',
       tags: (item.title || '').toLowerCase().split(/[\s,]+/).filter(w => w.length > 2)
     }));
-  } catch(e) { console.warn('SerpAPI err:', e); return []; }
+  } catch(e) { console.warn('Fetch err:', e); return []; }
 }
 
 function galScore(img, genderGal) {
