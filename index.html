@@ -492,10 +492,10 @@ async function saveKeys() {
 function updateKeyStatus() {
   const bar = document.getElementById('key-status-bar');
   if (!bar) return;
-  if (GOOGLE_KEY && GOOGLE_CX) {
+  if (GOOGLE_KEY) {
     bar.innerHTML = '<div class="key-status">✅ API key\'ler yüklendi — Pinterest araması aktif</div>';
   } else {
-    bar.innerHTML = '<div class="key-status warn">⚠️ API key girilmemiş — lütfen aşağıya girin</div>';
+    bar.innerHTML = '<div class="key-status warn">⚠️ SerpAPI key girilmemiş — lütfen aşağıya girin</div>';
   }
 }
 
