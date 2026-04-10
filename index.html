@@ -570,8 +570,10 @@ async function doSearch() {
   }
   setLoading(true);
   try {
-    const gHint = detectGender(q);
-    const refined = await refineQuery(q);
+    const gHint = filters.gender || detectGender(q);
+    const genderEn = {'Kadın':'women','Erkek':'men','Kız Çocuk':'girls kids','Erkek Çocuk':'boys kids'}[gHint] || '';
+    const qWithGender = genderEn ? (genderEn + ' ' + q) : q;
+    const refined = await refineQuery(qWithGender);
     await fetchImages(refined, gHint);
     showDiscover();
     if (window.innerWidth < 900) toggleSide();
@@ -586,7 +588,8 @@ async function applyFilters() {
     switchTab('settings', document.querySelectorAll('.ntab')[2]);
     return;
   }
-  const q = [filters.gender, filters.season, filters.style, 'kombin'].filter(Boolean).join(' ');
+  const genderEn = {'Kadın':'women','Erkek':'men','Kız Çocuk':'girls kids','Erkek Çocuk':'boys kids'}[filters.gender] || '';
+  const q = [genderEn, filters.season, filters.style, 'outfit fashion'].filter(Boolean).join(' ');
   setLoading(true);
   try {
     const refined = await refineQuery(q);
@@ -614,7 +617,7 @@ function detectGender(q) {
 
 async function refineQuery(q) {
   const map = [
-    ['erkek çocuk','boys kids'],['kız çocuk','girls kids'],
+    ['erkek çocuk','boys kids fashion'],['kız çocuk','girls kids fashion'],
     ['kadın','women'],['erkek','men'],
     ['kış','winter'],['yaz','summer'],['ilkbahar','spring'],['sonbahar','fall'],
     ['spor','athletic sporty'],['smart casual','smart casual'],
@@ -646,7 +649,9 @@ async function refineQuery(q) {
 const BLOCKED_KEYWORDS = ['thobe','kaftan','jalabiya','abaya','hijab','niqab','burqa','kurta','salwar','kufi','turban','jubbah','prayer','islamic','muslim','ethnic','traditional','cultural','religious','arabic','saudi','gulf','middle east','south asian','jubbeh','dishdasha'];
 
 async function fetchImages(query, genderHint) {
-  const genderGal = genderHint ? gallery.filter(g => g.gender === genderHint) : gallery;
+  // Önce cinsiyet filtreyle, boşsa tüm galeriyi kullan
+  let genderGal = genderHint ? gallery.filter(g => g.gender === genderHint) : gallery;
+  if (genderGal.length === 0 && gallery.length > 0) genderGal = gallery; // fallback
   
   // Galeri profili ve görsel arama paralel başlat
   const [imgs, galleryProfile] = await Promise.all([
@@ -684,13 +689,18 @@ async function fetchImages(query, genderHint) {
   renderPins();
   
   // Sonra Claude ile görsel analizi yaparak rozeti güncelle (arka planda)
-  console.log('🎯 CLAUDE_KEY:', !!CLAUDE_KEY, 'galleryProfile:', galleryProfile);
   if (CLAUDE_KEY && galleryProfile && galleryProfile.length) {
     analyzeAndUpdateBadges(pinResults, galleryProfile);
   } else if (!CLAUDE_KEY) {
-    toast('💡 Claude key ekleyin → gardrop eşleşmesi aktif olur');
+    console.warn('No Claude key for badge analysis');
   } else if (!galleryProfile || !galleryProfile.length) {
-    toast('💡 Gardrobunuza fotoğraf ekleyin → eşleşme aktif olur');  
+    console.warn('No gallery profile - gallery size:', genderGal.length);
+    // Gardrop varsa direkt analiz et
+    if (genderGal.length > 0 && CLAUDE_KEY) {
+      buildWardrobeItems(genderGal).then(profile => {
+        if (profile && profile.length) analyzeAndUpdateBadges(pinResults, profile);
+      });
+    }
   }
 }
 
