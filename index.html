@@ -644,7 +644,12 @@ async function refineQuery(q) {
 // ── GÖRSEL ÇEKME ──
 async function fetchImages(query, genderHint) {
   const genderGal = genderHint ? gallery.filter(g => g.gender === genderHint) : gallery;
-  const imgs = await fetchGoogle(query);
+  
+  // Galeri profili ve görsel arama paralel başlat
+  const [imgs, galleryProfile] = await Promise.all([
+    fetchGoogle(query),
+    buildGalleryProfile(genderGal)
+  ]);
 
   if (imgs.length === 0) {
     toast('Sonuç bulunamadı. ⚙️ API key\'leri kontrol edin.');
@@ -655,13 +660,19 @@ async function fetchImages(query, genderHint) {
 
   const seen = new Set();
   const merged = imgs.filter(img => {
-    if (seen.has(img.url)) return false;
+    if (!img.url || seen.has(img.url)) return false;
     seen.add(img.url); return true;
   }).slice(0, 30);
 
-  const scored = merged.map(img => ({ img: img, s: galScore(img, genderGal) }));
+  // Her görseli galeri profiliyle skorla
+  const scored = merged.map(img => ({ 
+    img: img, 
+    s: galScore(img, genderGal, galleryProfile) 
+  }));
   scored.sort((a, b) => b.s - a.s);
   pinResults = scored.map(x => x.img);
+  // Skor bilgisini de sakla (rozet için)
+  pinResults.forEach((img, i) => { img._score = scored[i] ? scored[i].s : 0; });
   renderPins();
 }
 
@@ -672,24 +683,69 @@ async function fetchGoogle(query) {
     const url = 'https://kombinai.semihcanyanar.workers.dev?q=' + encodeURIComponent(pq) + '&key=' + GOOGLE_KEY;
     const d = await fetch(url).then(r => r.json()).catch(() => ({}));
     return (d.images_results || []).map(item => ({
-      url: item.original,
-      thumb: item.thumbnail,
+      url: item.original,           // yüksek kalite orijinal
+      thumb: item.original,         // thumb yerine de orijinal kullan
       title: item.title || '',
-      tags: (item.title || '').toLowerCase().split(/[\s,]+/).filter(w => w.length > 2)
+      tags: (item.title || '').toLowerCase().split(/[\s,]+/).filter(w => w.length > 2),
+      source: item.source || '',
+      link: item.link || ''
     }));
   } catch(e) { console.warn('Fetch err:', e); return []; }
 }
 
-function galScore(img, genderGal) {
+// Galeri profili cache
+let _galleryProfile = null;
+let _galleryProfileGender = null;
+
+async function buildGalleryProfile(genderGal) {
+  if (!CLAUDE_KEY || !genderGal || !genderGal.length) return null;
+  if (_galleryProfile && _galleryProfileGender === (genderGal[0] && genderGal[0].gender)) return _galleryProfile;
+  try {
+    const sample = genderGal.slice(0, 6);
+    const imageContent = sample.map(item => ({
+      type: 'image',
+      source: { type: 'url', url: item.url }
+    }));
+    imageContent.push({
+      type: 'text',
+      text: 'Analyze these wardrobe clothing items. Return ONLY a JSON array of style keywords like: ["casual","denim","streetwear","blue","oversized","minimalist"]. Max 20 keywords.'
+    });
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': CLAUDE_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 200, messages: [{ role: 'user', content: imageContent }] })
+    });
+    const d = await resp.json();
+    const txt = (d.content && d.content[0] ? d.content[0].text : '[]').replace(/```json|```/g,'').trim();
+    _galleryProfile = JSON.parse(txt);
+    _galleryProfileGender = genderGal[0] && genderGal[0].gender;
+    return _galleryProfile;
+  } catch(e) { return null; }
+}
+
+function galScore(img, genderGal, galleryProfile) {
   if (!genderGal || !genderGal.length) return 0;
-  const imgTags = (img.tags || []);
-  if (!imgTags.length) return 0;
+  const imgTags = (img.tags || []).map(t => t.toLowerCase());
+  const imgTitle = (img.title || '').toLowerCase();
+  const allText = imgTags.join(' ') + ' ' + imgTitle;
+  
+  // AI profili varsa kullan
+  if (galleryProfile && galleryProfile.length) {
+    let score = 0;
+    galleryProfile.forEach(kw => {
+      if (allText.includes(kw.toLowerCase())) score += 2;
+    });
+    return score;
+  }
+  
+  // Fallback: alt albüm keyword match
   const kw = new Set();
   genderGal.forEach(g => {
     (g.subAlbum || '').toLowerCase().split(' ').forEach(w => { if (w.length > 2) kw.add(w); });
+    (g.name || '').toLowerCase().split(/[\s_-]+/).forEach(w => { if (w.length > 2) kw.add(w); });
   });
   let score = 0;
-  kw.forEach(k => { if (imgTags.some(t => t.includes(k) || k.includes(t))) score++; });
+  kw.forEach(k => { if (allText.includes(k)) score++; });
   return score;
 }
 
@@ -699,13 +755,25 @@ function renderPins() {
   document.getElementById('empty').style.display = pinResults.length ? 'none' : 'flex';
   pg.innerHTML = '';
   pinResults.forEach((img, i) => {
-    const star = gallery.length > 0 && galScore(img, gallery) > 0;
+    const isMatch = img._score > 0;
     const card = document.createElement('div');
     card.className = 'pcard ' + HEIGHTS[i % HEIGHTS.length];
-    card.innerHTML =
-      '<img src="' + (img.thumb || img.url) + '" loading="lazy" onerror="this.style.height=\'160px\';this.style.background=\'#2a2a2a\'"/>' +
-      '<div class="pov"></div>' +
-      (star ? '<div class="pstar" title="Gardrobunuzla uyumlu!">⭐</div>' : '');
+    const imgEl = document.createElement('img');
+    imgEl.src = img.url;
+    imgEl.loading = 'lazy';
+    imgEl.style.cssText = 'width:100%;display:block;object-fit:cover';
+    imgEl.onerror = function() { this.style.height='160px'; this.style.background='#2a2a2a'; this.style.display='block'; };
+    card.appendChild(imgEl);
+    const pov = document.createElement('div');
+    pov.className = 'pov';
+    card.appendChild(pov);
+    if (isMatch) {
+      const badge = document.createElement('div');
+      badge.className = 'pstar';
+      badge.title = 'Gardrobunuzla uyumlu!';
+      badge.textContent = '⭐';
+      card.appendChild(badge);
+    }
     (function(imgData) { card.onclick = function() { openPinModal(imgData); }; })(img);
     pg.appendChild(card);
   });
@@ -719,6 +787,7 @@ function openPinModal(img) {
 // ── GALERİ ──
 function setGender(el, gender) {
   curGender = gender; curSub = '';
+  _galleryProfile = null; // Reset cache when gender changes
   document.querySelectorAll('.ggt').forEach(g => g.classList.remove('on'));
   el.classList.add('on');
   renderSubChips(); renderGallery();
