@@ -642,6 +642,9 @@ async function refineQuery(q) {
 }
 
 // ── GÖRSEL ÇEKME ──
+// Filtrelenmesi gereken içerikler
+const BLOCKED_KEYWORDS = ['thobe','kaftan','jalabiya','abaya','hijab','niqab','burqa','kurta','salwar','kufi','turban','jubbah','prayer','islamic','muslim','ethnic','traditional','cultural','religious','arabic','saudi','gulf','middle east','south asian','jubbeh','dishdasha'];
+
 async function fetchImages(query, genderHint) {
   const genderGal = genderHint ? gallery.filter(g => g.gender === genderHint) : gallery;
   
@@ -651,7 +654,13 @@ async function fetchImages(query, genderHint) {
     buildGalleryProfile(genderGal)
   ]);
 
-  if (imgs.length === 0) {
+  // Geleneksel/dini kıyafetleri filtrele
+  const filtered = imgs.filter(img => {
+    const text = ((img.title || '') + ' ' + (img.tags || []).join(' ') + ' ' + (img.source || '')).toLowerCase();
+    return !BLOCKED_KEYWORDS.some(kw => text.includes(kw));
+  });
+
+  if (filtered.length === 0) {
     toast('Sonuç bulunamadı. ⚙️ API key\'leri kontrol edin.');
     document.getElementById('empty').style.display = 'flex';
     document.getElementById('pgrid').innerHTML = '';
@@ -829,12 +838,19 @@ async function analyzeAndUpdateBadges(imgs, wardrobeItems) {
       const pinItems = await analyzePinImage(img.url);
       if (!pinItems || !pinItems.length) continue;
       
-      // KOMBİNDEKİ HER PARÇA gardropta var mı?
-      const allMatch = pinItems.every(pinItem => {
+      // KOMBİNDEKİ TEMEL PARÇALAR gardropta var mı? (üst + alt veya dış giyim)
+      // Aksesuarları ve küçük detayları hariç tut
+      const mainTypes = ['jacket','coat','pants','jeans','shirt','tshirt','t-shirt','sweater','hoodie','dress','skirt','boots','sneakers','shoes','ceket','palto','pantolon','kot','gömlek','kazak','elbise','etek','bot','ayakkabı'];
+      const mainItems = pinItems.filter(p => mainTypes.some(t => p.toLowerCase().includes(t)));
+      
+      if (mainItems.length === 0) { img._score = 0; updatePinBadge(img); continue; }
+      
+      // Ana kıyafet parçalarının TAMAMI gardropta olmalı
+      const allMainMatch = mainItems.every(pinItem => {
         return wardrobeItems.some(wardrobeItem => itemsMatch(wardrobeItem, pinItem));
       });
       
-      img._score = allMatch ? 10 : 0;
+      img._score = allMainMatch ? 10 : 0;
       updatePinBadge(img);
     } catch(e) { continue; }
   }
@@ -871,10 +887,12 @@ function renderPins() {
     const card = document.createElement('div');
     card.className = 'pcard ' + HEIGHTS[i % HEIGHTS.length];
     const imgEl = document.createElement('img');
-    imgEl.src = img.url;
     imgEl.loading = 'lazy';
     imgEl.style.cssText = 'width:100%;display:block;object-fit:cover';
-    imgEl.onerror = function() { this.style.height='160px'; this.style.background='#2a2a2a'; this.style.display='block'; };
+    imgEl.onerror = function() { 
+      this.parentElement.style.display='none'; // Yüklenemeyen kartı gizle
+    };
+    imgEl.src = img.url;
     card.appendChild(imgEl);
     const pov = document.createElement('div');
     pov.className = 'pov';
