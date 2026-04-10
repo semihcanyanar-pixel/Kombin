@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 
-<!-- Firebase SDK (compat version - global scope) -->
+<!-- Firebase SDK -->
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 
@@ -21,25 +21,18 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-remote-config-compat.js"></script>
-
 <script>
-// Firebase başlat
-const firebaseConfig = {
+firebase.initializeApp({
   apiKey: "AIzaSyA8nrpyo6qdVDzeMg8E2p5GZxqrFjFgGfU",
   authDomain: "kombin-d1288.firebaseapp.com",
   projectId: "kombin-d1288",
   storageBucket: "kombin-d1288.firebasestorage.app",
   messagingSenderId: "685494136121",
   appId: "1:685494136121:web:83cb5517f59d6ec9010ce8"
-};
-firebase.initializeApp(firebaseConfig);
-const _auth    = firebase.auth();
-const _db      = firebase.firestore();
+});
+const _auth = firebase.auth();
+const _db   = firebase.firestore();
 const _storage = firebase.storage();
-const _rc      = firebase.remoteConfig();
-_rc.settings.minimumFetchIntervalMillis = 3600000;
-_rc.defaultConfig = { claude_api_key:'', google_api_key:'', google_cx:'' };
 </script>
 
 <style>
@@ -107,7 +100,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
 
 /* MAIN */
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-.nav{display:flex;align-items:center;gap:10px;padding:10px 14px;
+.nav{display:flex;align-items:center;gap:8px;padding:10px 14px;
   background:var(--sf);border-bottom:1px solid var(--bd);flex-shrink:0}
 .ntabs{display:flex;background:#252525;border-radius:22px;padding:3px;gap:2px}
 .ntab{padding:6px 15px;border-radius:18px;border:none;background:transparent;
@@ -117,6 +110,12 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
 .pill{padding:3px 9px;border-radius:12px;background:#2a2a2a;font-size:.7rem;
   color:var(--tx);display:flex;align-items:center;gap:4px;white-space:nowrap}
 .pill button{background:none;border:none;color:var(--mu);cursor:pointer;font-size:9px;padding:0}
+
+/* Settings button */
+.settings-btn{background:none;border:none;color:var(--mu);cursor:pointer;
+  font-size:1.1rem;padding:4px;border-radius:8px;transition:color .2s;flex-shrink:0}
+.settings-btn:hover{color:var(--tx)}
+
 .panel{display:none;flex:1;overflow-y:auto;padding:var(--gap)}.panel.on{display:block}
 .panel::-webkit-scrollbar{width:4px}.panel::-webkit-scrollbar-thumb{background:#2a2a2a;border-radius:4px}
 
@@ -165,6 +164,25 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
   border:none;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:13px;
   display:none;align-items:center;justify-content:center;color:#fff}
 .gi:hover .gi-more{display:flex}
+
+/* SETTINGS PANEL */
+.settings-panel{padding:16px}
+.settings-panel h3{font-size:1rem;font-weight:600;color:var(--wh);margin-bottom:4px}
+.settings-panel p{font-size:.75rem;color:var(--mu);margin-bottom:16px;line-height:1.5}
+.setting-item{margin-bottom:14px}
+.setting-item label{display:block;font-size:.72rem;color:var(--mu);margin-bottom:5px;font-weight:500;letter-spacing:.05em;text-transform:uppercase}
+.setting-item input{width:100%;padding:9px 12px;background:#252525;border:1px solid var(--bd);
+  border-radius:10px;font-size:.78rem;color:var(--tx);outline:none;font-family:'DM Sans';
+  transition:border-color .2s}
+.setting-item input:focus{border-color:var(--ac)}
+.setting-item .hint{font-size:.68rem;color:#555;margin-top:4px}
+.save-keys-btn{width:100%;padding:11px 0;background:var(--ac);color:#fff;border:none;
+  border-radius:22px;cursor:pointer;font-size:.85rem;font-weight:600;margin-top:8px;
+  transition:opacity .2s}
+.save-keys-btn:hover{opacity:.87}
+.key-status{display:flex;align-items:center;gap:6px;margin-top:12px;padding:10px 12px;
+  background:#1a2a1a;border-radius:10px;font-size:.75rem;color:#7ec87e;border:1px solid #2a3a2a}
+.key-status.warn{background:#2a1a1a;color:#e37e7e;border-color:#3a2a2a}
 
 /* UPLOAD ZONE */
 .uz{border:2px dashed #2e2e2e;border-radius:12px;padding:26px;text-align:center;
@@ -235,9 +253,6 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
 <!-- App -->
 
 <div class="shell" id="app" style="display:none">
-
-  <!-- Left Panel -->
-
   <div class="lp" id="sidebar">
     <div class="logo">
       <div class="logo-i">👗</div>
@@ -287,8 +302,6 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
     </div>
   </div>
 
-  <!-- Main -->
-
   <div class="main">
     <div class="nav">
       <div class="ntabs">
@@ -296,6 +309,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
         <button class="ntab" onclick="switchTab('gallery',this)">👚 Gardrobum</button>
       </div>
       <div class="pills" id="pills"></div>
+      <button class="settings-btn" onclick="switchTab('settings',this)" title="Ayarlar">⚙️</button>
     </div>
 
 ```
@@ -325,6 +339,45 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
   <div class="ulim" id="ulim">0 / 50 fotoğraf</div>
   <div class="gg" id="gg"></div>
 </div>
+
+<!-- Settings -->
+<div class="panel" id="tab-settings">
+  <div class="settings-panel">
+    <h3>⚙️ API Ayarları</h3>
+    <p>API key'lerinizi girin. Firestore'da güvenle saklanır, bir daha girmenize gerek kalmaz.</p>
+
+    <div id="key-status-bar"></div>
+
+    <div class="setting-item">
+      <label>Google Custom Search API Key</label>
+      <input type="password" id="inp-gkey" placeholder="AIzaSy..."/>
+      <div class="hint">Google Cloud Console → Kombin projesi → Credentials</div>
+    </div>
+
+    <div class="setting-item">
+      <label>Google Custom Search CX (Engine ID)</label>
+      <input type="text" id="inp-cx" placeholder="xxxxxxxxxxxxxxxxx"/>
+      <div class="hint">programmablesearchengine.google.com → Search engine ID</div>
+    </div>
+
+    <div class="setting-item">
+      <label>Claude API Key</label>
+      <input type="password" id="inp-claude" placeholder="sk-ant-..."/>
+      <div class="hint">console.anthropic.com → API Keys</div>
+    </div>
+
+    <button class="save-keys-btn" onclick="saveKeys()">💾 Kaydet</button>
+
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--bd)">
+      <div class="sec-h" style="margin-bottom:8px">Uygulama Hakkında</div>
+      <p style="font-size:.72rem;color:#555;line-height:1.6">
+        Kombin – Stil Asistanın<br>
+        Google Custom Search ile Pinterest'ten kombin görselleri getirir.<br>
+        Fotoğraflarınız Firebase Storage'da güvenle saklanır.
+      </p>
+    </div>
+  </div>
+</div>
 ```
 
   </div>
@@ -336,14 +389,10 @@ body{font-family:'DM Sans',sans-serif;color:var(--tx);-webkit-font-smoothing:ant
 <div id="mw"></div>
 
 <script>
-/* ═══════════════════════════════════════
-   STATE
-═══════════════════════════════════════ */
+// ── STATE ──
 let CLAUDE_KEY = '';
-let GOOGLE_KEY = 'AIzaSyDqSkvi_iv44YZ6JKv22t90dRmGgzNecW4';
-let GOOGLE_CX  = '5053e387540ba4417';
-// Unsplash kaldırıldı - sadece Google/Pinterest kullanılıyor
-
+let GOOGLE_KEY = '';
+let GOOGLE_CX  = '';
 let grid = 3;
 let filters = { style: null, gender: null, season: null };
 let gallery = [];
@@ -354,64 +403,50 @@ let pinResults = [];
 let userId = null;
 const HEIGHTS = ['h-m','h-l','h-m','h-s','h-xl','h-m','h-l','h-s','h-m','h-xl','h-s','h-l','h-m','h-s'];
 
-/* ═══════════════════════════════════════
-   FIREBASE INIT
-═══════════════════════════════════════ */
+// ── FIREBASE INIT ──
 function initApp() {
-  // 6 saniye içinde Firebase bağlanamazsa yine de aç
-  const fallbackTimer = setTimeout(() => {
-    console.warn('Firebase timeout - showing app anyway');
-    showApp();
-  }, 6000);
+  const fallback = setTimeout(() => showApp(), 7000);
 
-  _auth.signInAnonymously()
-    .catch(err => { console.warn('Auth error:', err); });
+  _auth.signInAnonymously().catch(e => { console.warn('Auth err:', e); clearTimeout(fallback); showApp(); });
 
   _auth.onAuthStateChanged(async user => {
-    clearTimeout(fallbackTimer);
+    clearTimeout(fallback);
     if (!user) { showApp(); return; }
     userId = user.uid;
 
-    // Remote Config (sessiz hata)
+    // API key'leri Firestore'dan yükle
     try {
-      await Promise.race([
-        _rc.fetchAndActivate(),
-        new Promise((_, r) => setTimeout(() => r('rc_timeout'), 3000))
-      ]);
-      const ck = _rc.getValue('claude_api_key').asString();
-      const gk = _rc.getValue('google_api_key').asString();
-      const gc = _rc.getValue('google_cx').asString();
-      if (ck) CLAUDE_KEY = ck;
-      if (gk) GOOGLE_KEY = gk;
-      if (gc) GOOGLE_CX  = gc;
-    } catch(e) { console.warn('Remote config skipped:', e); }
+      const doc = await _db.collection('users').doc(userId).collection('settings').doc('apikeys').get();
+      if (doc.exists) {
+        const d = doc.data();
+        if (d.googleKey) GOOGLE_KEY = d.googleKey;
+        if (d.googleCx)  GOOGLE_CX  = d.googleCx;
+        if (d.claudeKey) CLAUDE_KEY = d.claudeKey;
+      }
+    } catch(e) { console.warn('Keys load err:', e); }
 
-    // Firestore'dan galeriyi yükle (sessiz hata)
+    // Galeriyi yükle
     try {
-      const snap = await Promise.race([
-        _db.collection('users').doc(userId).collection('gallery').get(),
-        new Promise((_, r) => setTimeout(() => r('fs_timeout'), 5000))
-      ]);
-      if (snap && !snap.empty) {
+      const snap = await _db.collection('users').doc(userId).collection('gallery').get();
+      if (!snap.empty) {
         gallery = [];
-        snap.forEach(d => gallery.push({ id: d.id, ...d.data() }));
-        gallery.forEach(g => {
-          if (!g.gender) g.gender = 'Kadın';
-          if (!g.subAlbum) g.subAlbum = '';
+        snap.forEach(d => {
+          const item = { id: d.id, ...d.data() };
+          if (!item.gender) item.gender = 'Kadın';
+          if (!item.subAlbum) item.subAlbum = '';
+          gallery.push(item);
         });
       }
-      const saDoc = await Promise.race([
-        _db.collection('users').doc(userId).collection('settings').doc('subAlbums').get(),
-        new Promise((_, r) => setTimeout(() => r('sa_timeout'), 3000))
-      ]);
-      if (saDoc && saDoc.exists) {
+      const saDoc = await _db.collection('users').doc(userId).collection('settings').doc('subAlbums').get();
+      if (saDoc.exists) {
         const data = saDoc.data();
-        Object.keys(data).forEach(k => { if (subAlbums[k]) subAlbums[k] = data[k]; });
+        Object.keys(data).forEach(k => { if (subAlbums[k] !== undefined) subAlbums[k] = data[k]; });
       }
-    } catch(e) { console.warn('Firestore load skipped:', e); }
+    } catch(e) { console.warn('Gallery load err:', e); }
 
     renderGallery();
     renderSubChips();
+    updateKeyStatus();
     showApp();
   });
 }
@@ -425,40 +460,49 @@ function showApp() {
   }, 500);
 }
 
-/* ═══════════════════════════════════════
-   SAVE HELPERS
-═══════════════════════════════════════ */
-async function saveGalleryItem(item) {
-  if (!userId) return;
+// ── SAVE API KEYS ──
+async function saveKeys() {
+  const gkey   = document.getElementById('inp-gkey').value.trim();
+  const cx     = document.getElementById('inp-cx').value.trim();
+  const claude = document.getElementById('inp-claude').value.trim();
+
+  if (!gkey || !cx) { toast('Google Key ve CX zorunlu!'); return; }
+  if (!userId) { toast('Giriş bekleniyor...'); return; }
+
   try {
-    await _db.collection('users').doc(userId).collection('gallery').doc(item.id).set(item);
-  } catch(e) { console.warn('Save error:', e); }
+    await _db.collection('users').doc(userId).collection('settings').doc('apikeys').set({
+      googleKey: gkey,
+      googleCx: cx,
+      claudeKey: claude,
+      updatedAt: Date.now()
+    });
+    if (gkey)   GOOGLE_KEY = gkey;
+    if (cx)     GOOGLE_CX  = cx;
+    if (claude) CLAUDE_KEY = claude;
+
+    toast('API key\'ler kaydedildi ✓');
+    updateKeyStatus();
+
+    // Input'ları temizle
+    document.getElementById('inp-gkey').value = '';
+    document.getElementById('inp-cx').value = '';
+    document.getElementById('inp-claude').value = '';
+  } catch(e) {
+    toast('Kaydetme hatası: ' + e.message);
+  }
 }
 
-async function updateGalleryItem(id, data) {
-  if (!userId) return;
-  try {
-    await _db.collection('users').doc(userId).collection('gallery').doc(id).update(data);
-  } catch(e) { console.warn('Update error:', e); }
+function updateKeyStatus() {
+  const bar = document.getElementById('key-status-bar');
+  if (!bar) return;
+  if (GOOGLE_KEY && GOOGLE_CX) {
+    bar.innerHTML = '<div class="key-status">✅ API key\'ler yüklendi — Pinterest araması aktif</div>';
+  } else {
+    bar.innerHTML = '<div class="key-status warn">⚠️ API key girilmemiş — lütfen aşağıya girin</div>';
+  }
 }
 
-async function deleteGalleryItem(id) {
-  if (!userId) return;
-  try {
-    await _db.collection('users').doc(userId).collection('gallery').doc(id).delete();
-  } catch(e) { console.warn('Delete error:', e); }
-}
-
-async function saveSubAlbums() {
-  if (!userId) return;
-  try {
-    await _db.collection('users').doc(userId).collection('settings').doc('subAlbums').set(subAlbums);
-  } catch(e) { console.warn('SubAlbum save error:', e); }
-}
-
-/* ═══════════════════════════════════════
-   CHIP SELECTION
-═══════════════════════════════════════ */
+// ── CHIP SEÇİMİ ──
 ['cs','cg','cm'].forEach(id => {
   document.getElementById(id).addEventListener('click', e => {
     const chip = e.target.closest('.chip');
@@ -475,7 +519,7 @@ async function saveSubAlbums() {
 function renderPills() {
   const w = document.getElementById('pills');
   w.innerHTML = '';
-  [['style', filters.style], ['gender', filters.gender], ['season', filters.season]].forEach(([k, v]) => {
+  [['style',filters.style],['gender',filters.gender],['season',filters.season]].forEach(([k,v]) => {
     if (!v) return;
     const d = document.createElement('div');
     d.className = 'pill';
@@ -493,7 +537,7 @@ function clearFilter(key) {
 
 function setGrid(n) {
   grid = n;
-  document.getElementById('gp').querySelectorAll('button').forEach((b, i) => b.classList.toggle('on', i + 1 === n));
+  document.getElementById('gp').querySelectorAll('button').forEach((b,i) => b.classList.toggle('on', i+1===n));
   document.getElementById('pgrid').className = 'pgrid c' + n;
 }
 
@@ -501,7 +545,11 @@ function switchTab(name, btn) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
   document.querySelectorAll('.ntab').forEach(b => b.classList.remove('on'));
   document.getElementById('tab-' + name).classList.add('on');
-  btn.classList.add('on');
+  if (btn && btn.classList.contains('ntab')) btn.classList.add('on');
+  // Settings buton aktif görünümü
+  const sb = document.querySelector('.settings-btn');
+  if (sb) sb.style.color = (name === 'settings') ? 'var(--ac)' : '';
+  if (name === 'settings') updateKeyStatus();
 }
 
 function toggleSide() {
@@ -514,12 +562,15 @@ function setLoading(on) {
   document.getElementById('slbl').textContent = on ? 'Aranıyor…' : '🔍 AI ile Ara';
 }
 
-/* ═══════════════════════════════════════
-   SEARCH
-═══════════════════════════════════════ */
+// ── ARAMA ──
 async function doSearch() {
   const q = document.getElementById('q').value.trim();
   if (!q) { toast('Lütfen bir arama yazın'); return; }
+  if (!GOOGLE_KEY || !GOOGLE_CX) {
+    toast('⚙️ Önce API key girin!');
+    switchTab('settings', document.querySelectorAll('.ntab')[2]);
+    return;
+  }
   setLoading(true);
   try {
     const gHint = detectGender(q);
@@ -533,6 +584,11 @@ async function doSearch() {
 
 async function applyFilters() {
   if (!filters.style && !filters.gender && !filters.season) { toast('En az bir filtre seçin'); return; }
+  if (!GOOGLE_KEY || !GOOGLE_CX) {
+    toast('⚙️ Önce API key girin!');
+    switchTab('settings', document.querySelectorAll('.ntab')[2]);
+    return;
+  }
   const q = [filters.gender, filters.season, filters.style, 'kombin'].filter(Boolean).join(' ');
   setLoading(true);
   try {
@@ -547,15 +603,15 @@ async function applyFilters() {
 function showDiscover() {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
   document.getElementById('tab-discover').classList.add('on');
-  document.querySelectorAll('.ntab').forEach((b, i) => b.classList.toggle('on', i === 0));
+  document.querySelectorAll('.ntab').forEach((b,i) => b.classList.toggle('on', i===0));
 }
 
 function detectGender(q) {
   const l = q.toLowerCase();
   if (l.includes('erkek çocuk') || l.includes('boys')) return 'Erkek Çocuk';
   if (l.includes('kız çocuk') || l.includes('girls')) return 'Kız Çocuk';
-  if (l.includes('kadın') || l.includes('women') || l.includes('woman')) return 'Kadın';
-  if (l.includes('erkek') || l.includes('men') || l.includes('man')) return 'Erkek';
+  if (l.includes('kadın') || l.includes('women')) return 'Kadın';
+  if (l.includes('erkek') || l.includes('men')) return 'Erkek';
   return null;
 }
 
@@ -564,127 +620,95 @@ async function refineQuery(q) {
     ['erkek çocuk','boys kids'],['kız çocuk','girls kids'],
     ['kadın','women'],['erkek','men'],
     ['kış','winter'],['yaz','summer'],['ilkbahar','spring'],['sonbahar','fall'],
-    ['spor','athletic sporty streetwear'],['smart casual','smart casual'],
-    ['casual','casual everyday'],['klasik','classic formal'],
-    ['boho','bohemian'],['kombin','outfit look'],
-    ['elbise','dress'],['pantolon','pants'],['etek','skirt'],
-    ['ceket','jacket blazer'],['kazak','sweater'],['mont','coat']
+    ['spor','athletic sporty'],['smart casual','smart casual'],
+    ['casual','casual'],['klasik','classic formal'],
+    ['boho','bohemian'],['kombin','outfit']
   ];
   let r = q.toLowerCase();
-  map.forEach(function(pair) { r = r.replace(new RegExp(pair[0], 'g'), pair[1]); });
+  map.forEach(p => { r = r.replace(new RegExp(p[0], 'g'), p[1]); });
   r = r.replace(/\s+/g, ' ').trim();
   if (!r.includes('outfit') && !r.includes('look')) r += ' outfit';
-  if (!r.includes('fashion')) r += ' fashion';
   if (!CLAUDE_KEY) return r;
   try {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: {
-        'x-api-key': CLAUDE_KEY,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json'
-      },
+      headers: { 'x-api-key': CLAUDE_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 50,
-        system: 'Convert to precise English Unsplash fashion photo search query (4-7 words). Return ONLY the query.',
+        model: 'claude-haiku-4-5-20251001', max_tokens: 50,
+        system: 'Convert to English Unsplash/Pinterest fashion search query (4-6 words). Return ONLY the query.',
         messages: [{ role: 'user', content: q }]
       })
     });
     const d = await resp.json();
-    return (d.content && d.content[0] && d.content[0].text) ? d.content[0].text.trim() : r;
+    return (d.content && d.content[0]) ? d.content[0].text.trim() : r;
   } catch(e) { return r; }
 }
 
-/* ═══════════════════════════════════════
-   IMAGE FETCHING
-═══════════════════════════════════════ */
+// ── GÖRSEL ÇEKME ──
 async function fetchImages(query, genderHint) {
   const genderGal = genderHint ? gallery.filter(g => g.gender === genderHint) : gallery;
-
-  // Sadece Google/Pinterest
   const imgs = await fetchGoogle(query);
 
   if (imgs.length === 0) {
-    toast('Sonuç bulunamadı. Google API key kontrol edin.');
-    renderPins();
+    toast('Sonuç bulunamadı. ⚙️ API key\'leri kontrol edin.');
+    document.getElementById('empty').style.display = 'flex';
+    document.getElementById('pgrid').innerHTML = '';
     return;
   }
 
-  // Dedup
   const seen = new Set();
-  const merged = [];
-  imgs.forEach(img => {
-    const key = img.url;
-    if (!seen.has(key)) { seen.add(key); merged.push(img); }
-  });
+  const merged = imgs.filter(img => {
+    if (seen.has(img.url)) return false;
+    seen.add(img.url); return true;
+  }).slice(0, 30);
 
-  // Score by gallery match - galeri uyumluları üste
   const scored = merged.map(img => ({ img: img, s: galScore(img, genderGal) }));
-  scored.sort(function(a, b) { return b.s - a.s; });
+  scored.sort((a, b) => b.s - a.s);
   pinResults = scored.map(x => x.img);
   renderPins();
 }
 
 async function fetchGoogle(query) {
-  if (!GOOGLE_KEY || !GOOGLE_CX) {
-    console.warn('Google API key veya CX eksik');
-    return [];
-  }
+  if (!GOOGLE_KEY || !GOOGLE_CX) return [];
   try {
-    // Pinterest'e özel arama - moda kelimeleri ekle
-    const pq = query + ' fashion outfit style';
-    // İki sayfa çek (10+10=20 sonuç)
-    const [page1, page2] = await Promise.all([
+    const pq = query + ' outfit fashion style';
+    const [p1, p2] = await Promise.all([
       fetch('https://www.googleapis.com/customsearch/v1?key=' + GOOGLE_KEY +
         '&cx=' + GOOGLE_CX + '&q=' + encodeURIComponent(pq) +
-        '&searchType=image&num=10&start=1&imgSize=large&safe=active&imgType=photo').then(r=>r.json()),
+        '&searchType=image&num=10&start=1&imgSize=large&safe=active').then(r => r.json()).catch(() => ({})),
       fetch('https://www.googleapis.com/customsearch/v1?key=' + GOOGLE_KEY +
         '&cx=' + GOOGLE_CX + '&q=' + encodeURIComponent(pq) +
-        '&searchType=image&num=10&start=11&imgSize=large&safe=active&imgType=photo').then(r=>r.json())
+        '&searchType=image&num=10&start=11&imgSize=large&safe=active').then(r => r.json()).catch(() => ({}))
     ]);
-    const allItems = [...(page1.items||[]), ...(page2.items||[])];
-    const seen = new Set();
-    return allItems.filter(item => {
-      if (seen.has(item.link)) return false;
-      seen.add(item.link); return true;
-    }).map(item => ({
+    const items = [...(p1.items||[]), ...(p2.items||[])];
+    return items.map(item => ({
       url: item.link,
       thumb: (item.image && item.image.thumbnailLink) ? item.image.thumbnailLink : item.link,
       title: item.title || '',
       tags: (item.title || '').toLowerCase().split(/[\s,]+/).filter(w => w.length > 2)
     }));
-  } catch(e) {
-    console.warn('Google fetch error:', e);
-    return [];
-  }
+  } catch(e) { console.warn('Google err:', e); return []; }
 }
-
-// fetchUnsplash kaldırıldı
 
 function galScore(img, genderGal) {
   if (!genderGal || !genderGal.length) return 0;
-  const imgTags = (img.tags || []).map(function(t) { return t.toLowerCase(); });
+  const imgTags = (img.tags || []);
   if (!imgTags.length) return 0;
-  const kw = [];
-  const seen = new Set();
+  const kw = new Set();
   genderGal.forEach(g => {
-    const words = (g.subAlbum || '').toLowerCase().split(' ');
-    words.forEach(w => { if (w.length > 2 && !seen.has(w)) { seen.add(w); kw.push(w); } });
+    (g.subAlbum || '').toLowerCase().split(' ').forEach(w => { if (w.length > 2) kw.add(w); });
   });
   let score = 0;
   kw.forEach(k => { if (imgTags.some(t => t.includes(k) || k.includes(t))) score++; });
   return score;
 }
 
-/* ═══════════════════════════════════════
-   RENDER PINS
-═══════════════════════════════════════ */
+// ── RENDER PINS ──
 function renderPins() {
   const pg = document.getElementById('pgrid');
   document.getElementById('empty').style.display = pinResults.length ? 'none' : 'flex';
   pg.innerHTML = '';
-  pinResults.forEach(function(img, i) {
+  pinResults.forEach((img, i) => {
     const star = gallery.length > 0 && galScore(img, gallery) > 0;
     const card = document.createElement('div');
     card.className = 'pcard ' + HEIGHTS[i % HEIGHTS.length];
@@ -692,31 +716,22 @@ function renderPins() {
       '<img src="' + (img.thumb || img.url) + '" loading="lazy" onerror="this.style.height=\'160px\';this.style.background=\'#2a2a2a\'"/>' +
       '<div class="pov"></div>' +
       (star ? '<div class="pstar" title="Gardrobunuzla uyumlu!">⭐</div>' : '');
-    (function(imgData) {
-      card.onclick = function() { openPinModal(imgData); };
-    })(img);
+    (function(imgData) { card.onclick = function() { openPinModal(imgData); }; })(img);
     pg.appendChild(card);
   });
   pg.className = 'pgrid c' + grid;
 }
 
 function openPinModal(img) {
-  showModal(
-    '<img src="' + img.url + '" onerror="this.style.display=\'none\'"/>' +
-    '<div class="mdb" style="margin-top:10px"><button class="cc" onclick="closeModal()">Kapat</button></div>'
-  );
+  showModal('<img src="' + img.url + '" onerror="this.style.display=\'none\'"/><div class="mdb" style="margin-top:10px"><button class="cc" onclick="closeModal()">Kapat</button></div>');
 }
 
-/* ═══════════════════════════════════════
-   GALLERY
-═══════════════════════════════════════ */
+// ── GALERİ ──
 function setGender(el, gender) {
-  curGender = gender;
-  curSub = '';
+  curGender = gender; curSub = '';
   document.querySelectorAll('.ggt').forEach(g => g.classList.remove('on'));
   el.classList.add('on');
-  renderSubChips();
-  renderGallery();
+  renderSubChips(); renderGallery();
 }
 
 function renderSubChips() {
@@ -727,18 +742,16 @@ function renderSubChips() {
   allChip.textContent = 'Tümü';
   allChip.onclick = function() { filterSub('', allChip); };
   wrap.appendChild(allChip);
-  const subs = subAlbums[curGender] || [];
-  subs.forEach(function(sa) {
+  (subAlbums[curGender] || []).forEach(sa => {
     const ch = document.createElement('div');
     ch.className = 'sch' + (curSub === sa ? ' on' : '');
     const span = document.createElement('span');
     span.textContent = sa;
-    ch.appendChild(span);
     const x = document.createElement('span');
     x.textContent = ' ✕';
     x.style.cssText = 'opacity:.45;margin-left:3px;cursor:pointer';
     x.onclick = function(e) { e.stopPropagation(); delSubAlbum(sa); };
-    ch.appendChild(x);
+    ch.appendChild(span); ch.appendChild(x);
     ch.onclick = function(e) { if (e.target !== x) filterSub(sa, ch); };
     wrap.appendChild(ch);
   });
@@ -756,12 +769,11 @@ function renderGallery() {
   gg.innerHTML = '';
   let list = gallery.filter(g => g.gender === curGender);
   if (curSub) list = list.filter(g => g.subAlbum === curSub);
-  list.forEach(function(item) {
+  list.forEach(item => {
     const d = document.createElement('div');
     d.className = 'gi';
     const img = document.createElement('img');
-    img.src = item.url;
-    img.loading = 'lazy';
+    img.src = item.url; img.loading = 'lazy';
     img.onerror = function() { this.style.display = 'none'; };
     d.appendChild(img);
     const lbl = document.createElement('div');
@@ -769,8 +781,7 @@ function renderGallery() {
     lbl.textContent = item.subAlbum || item.gender || '';
     d.appendChild(lbl);
     const btn = document.createElement('button');
-    btn.className = 'gi-more';
-    btn.textContent = '⋯';
+    btn.className = 'gi-more'; btn.textContent = '⋯';
     btn.onclick = function(e) { e.stopPropagation(); openPhotoActions(item); };
     d.appendChild(btn);
     d.onclick = function() { openPhotoActions(item); };
@@ -779,9 +790,7 @@ function renderGallery() {
   document.getElementById('ulim').textContent = gallery.length + ' / 50 fotoğraf';
 }
 
-/* ═══════════════════════════════════════
-   PHOTO ACTIONS
-═══════════════════════════════════════ */
+// ── PHOTO ACTIONS ──
 function openPhotoActions(item) {
   showModal(
     '<img src="' + item.url + '" onerror="this.style.display=\'none\'"/>' +
@@ -798,10 +807,10 @@ function openPhotoActions(item) {
 function buildAlbumOpts(excludeId) {
   const item = gallery.find(g => g.id === excludeId);
   let opts = '';
-  ['Kadın','Erkek','Kız Çocuk','Erkek Çocuk'].forEach(function(g) {
+  ['Kadın','Erkek','Kız Çocuk','Erkek Çocuk'].forEach(g => {
     opts += '<optgroup label="' + g + '">';
     opts += '<option value="' + g + '|">Ana albüm (' + g + ')</option>';
-    (subAlbums[g] || []).forEach(function(sa) {
+    (subAlbums[g] || []).forEach(sa => {
       if (item && item.gender === g && item.subAlbum === sa) return;
       opts += '<option value="' + g + '|' + sa + '">' + g + ' › ' + sa + '</option>';
     });
@@ -811,14 +820,7 @@ function buildAlbumOpts(excludeId) {
 }
 
 function openMoveModal(id) {
-  showModal(
-    '<h3>📦 Taşı</h3>' +
-    '<select id="mv-sel">' + buildAlbumOpts(id) + '</select>' +
-    '<div class="mdb">' +
-    '<button class="ok" onclick="doMove(\'' + id + '\')">Taşı</button>' +
-    '<button class="cc" onclick="closeModal()">İptal</button>' +
-    '</div>'
-  );
+  showModal('<h3>📦 Taşı</h3><select id="mv-sel">' + buildAlbumOpts(id) + '</select><div class="mdb"><button class="ok" onclick="doMove(\'' + id + '\')">Taşı</button><button class="cc" onclick="closeModal()">İptal</button></div>');
 }
 
 async function doMove(id) {
@@ -828,24 +830,13 @@ async function doMove(id) {
   const g = parts[0], sa = parts[1] || '';
   const item = gallery.find(x => x.id === id);
   if (!item) return;
-  item.gender = g;
-  item.subAlbum = sa;
-  await updateGalleryItem(id, { gender: g, subAlbum: sa });
-  closeModal();
-  renderGallery();
-  renderSubChips();
-  toast('Taşındı ✓');
+  item.gender = g; item.subAlbum = sa;
+  try { await _db.collection('users').doc(userId).collection('gallery').doc(id).update({ gender: g, subAlbum: sa }); } catch(e) {}
+  closeModal(); renderGallery(); renderSubChips(); toast('Taşındı ✓');
 }
 
 function openCopyModal(id) {
-  showModal(
-    '<h3>📋 Kopyala</h3>' +
-    '<select id="cp-sel">' + buildAlbumOpts(null) + '</select>' +
-    '<div class="mdb">' +
-    '<button class="ok" onclick="doCopy(\'' + id + '\')">Kopyala</button>' +
-    '<button class="cc" onclick="closeModal()">İptal</button>' +
-    '</div>'
-  );
+  showModal('<h3>📋 Kopyala</h3><select id="cp-sel">' + buildAlbumOpts(null) + '</select><div class="mdb"><button class="ok" onclick="doCopy(\'' + id + '\')">Kopyala</button><button class="cc" onclick="closeModal()">İptal</button></div>');
 }
 
 async function doCopy(id) {
@@ -859,37 +850,21 @@ async function doCopy(id) {
   const newId = 'c' + Date.now();
   const newItem = { id: newId, url: item.url, gender: g, subAlbum: sa, name: item.name || 'foto', createdAt: Date.now() };
   gallery.push(newItem);
-  await saveGalleryItem(newItem);
-  closeModal();
-  renderGallery();
-  renderSubChips();
-  toast('Kopyalandı ✓');
+  try { await _db.collection('users').doc(userId).collection('gallery').doc(newId).set(newItem); } catch(e) {}
+  closeModal(); renderGallery(); renderSubChips(); toast('Kopyalandı ✓');
 }
 
 async function doDelItem(id) {
   if (!confirm('Bu fotoğrafı sil?')) return;
   gallery = gallery.filter(g => g.id !== id);
-  await deleteGalleryItem(id);
-  closeModal();
-  renderGallery();
-  renderSubChips();
-  toast('Silindi');
+  try { await _db.collection('users').doc(userId).collection('gallery').doc(id).delete(); } catch(e) {}
+  closeModal(); renderGallery(); renderSubChips(); toast('Silindi');
 }
 
-/* ═══════════════════════════════════════
-   SUB ALBUMS
-═══════════════════════════════════════ */
+// ── ALT ALBÜM ──
 function openAddSub() {
-  showModal(
-    '<h3>➕ Alt Albüm</h3>' +
-    '<p style="font-size:.75rem;color:var(--mu);margin-bottom:8px">' + curGender + ' kategorisi altına</p>' +
-    '<input id="san" placeholder="Albüm adı…"/>' +
-    '<div class="mdb">' +
-    '<button class="ok" onclick="doAddSub()">Oluştur</button>' +
-    '<button class="cc" onclick="closeModal()">İptal</button>' +
-    '</div>'
-  );
-  setTimeout(function() { const el = document.getElementById('san'); if (el) el.focus(); }, 60);
+  showModal('<h3>➕ Alt Albüm</h3><p style="font-size:.75rem;color:var(--mu);margin-bottom:8px">' + curGender + ' kategorisi altına</p><input id="san" placeholder="Albüm adı…"/><div class="mdb"><button class="ok" onclick="doAddSub()">Oluştur</button><button class="cc" onclick="closeModal()">İptal</button></div>');
+  setTimeout(() => { const el = document.getElementById('san'); if (el) el.focus(); }, 60);
 }
 
 async function doAddSub() {
@@ -899,42 +874,35 @@ async function doAddSub() {
   if (!name) return;
   if (!subAlbums[curGender]) subAlbums[curGender] = [];
   if (!subAlbums[curGender].includes(name)) subAlbums[curGender].push(name);
-  await saveSubAlbums();
-  closeModal();
-  renderSubChips();
-  toast('Alt albüm oluşturuldu');
+  try { await _db.collection('users').doc(userId).collection('settings').doc('subAlbums').set(subAlbums); } catch(e) {}
+  closeModal(); renderSubChips(); toast('Alt albüm oluşturuldu');
 }
 
 async function delSubAlbum(sa) {
-  if (!confirm('"' + sa + '" albümünü sil? İçindeki fotoğraflar ana albüme taşınır.')) return;
+  if (!confirm('"' + sa + '" albümünü sil?')) return;
   const affected = gallery.filter(g => g.gender === curGender && g.subAlbum === sa);
   for (const item of affected) {
     item.subAlbum = '';
-    await updateGalleryItem(item.id, { subAlbum: '' });
+    try { await _db.collection('users').doc(userId).collection('gallery').doc(item.id).update({ subAlbum: '' }); } catch(e) {}
   }
   subAlbums[curGender] = subAlbums[curGender].filter(x => x !== sa);
   if (curSub === sa) curSub = '';
-  await saveSubAlbums();
-  renderSubChips();
-  renderGallery();
-  toast('Albüm silindi');
+  try { await _db.collection('users').doc(userId).collection('settings').doc('subAlbums').set(subAlbums); } catch(e) {}
+  renderSubChips(); renderGallery(); toast('Albüm silindi');
 }
 
-/* ═══════════════════════════════════════
-   UPLOAD
-═══════════════════════════════════════ */
+// ── UPLOAD ──
 function openUpload() {
   if (gallery.length >= 50) { toast('50 fotoğraf sınırına ulaştınız'); return; }
   const subs = subAlbums[curGender] || [];
-  const subOpts = subs.map(function(s) { return '<option value="' + s + '">' + s + '</option>'; }).join('');
+  const subOpts = subs.map(s => '<option value="' + s + '">' + s + '</option>').join('');
   showModal(
     '<h3>📷 Fotoğraf Ekle</h3>' +
     '<p style="font-size:.75rem;color:var(--mu);margin-bottom:8px">Kategori: <strong style="color:var(--wh)">' + curGender + '</strong></p>' +
     (subOpts ? '<select id="up-sub"><option value="">Ana albüm</option>' + subOpts + '</select>' : '<input type="hidden" id="up-sub" value=""/>') +
     '<div class="uz" onclick="document.getElementById(\'fi\').click()">' +
     '<div class="ui">📁</div><p>Tıklayarak seç</p>' +
-    '<p style="font-size:.7rem;margin-top:3px;color:#555">Otomatik sıkıştırılır</p>' +
-    '</div>' +
+    '<p style="font-size:.7rem;margin-top:3px;color:#555">Otomatik sıkıştırılır</p></div>' +
     '<input type="file" id="fi" accept="image/*" multiple style="display:none" onchange="handleUpload(event)"/>' +
     '<div class="mdb"><button class="cc" onclick="closeModal()">İptal</button></div>'
   );
@@ -945,40 +913,26 @@ async function handleUpload(e) {
   const subAlbum = (document.getElementById('up-sub') && document.getElementById('up-sub').value) || '';
   closeModal();
   let added = 0;
-  // upload started
   for (const file of files) {
     if (gallery.length >= 50) break;
     try {
-      // Firebase Storage'a yükle
       const blob = await compressToBlob(file, 800, 0.72);
       const path = 'users/' + userId + '/gallery/' + Date.now() + '_' + file.name;
-      const storageRef = _storage.ref(path);
-      await storageRef.put(blob);
-      const url = await storageRef.getDownloadURL();
-      const item = {
-        id: 'img_' + Date.now() + '_' + added,
-        url: url,
-        gender: curGender,
-        subAlbum: subAlbum,
-        name: file.name,
-        createdAt: Date.now()
-      };
+      const sRef = _storage.ref(path);
+      await sRef.put(blob);
+      const url = await sRef.getDownloadURL();
+      const item = { id: 'img_' + Date.now() + '_' + added, url, gender: curGender, subAlbum, name: file.name, createdAt: Date.now() };
       gallery.push(item);
-      await saveGalleryItem(item);
+      await _db.collection('users').doc(userId).collection('gallery').doc(item.id).set(item);
       added++;
-    } catch(err) {
-      console.warn('Upload error:', err);
-      toast('Yükleme hatası: ' + err.message);
-    }
+    } catch(err) { toast('Hata: ' + err.message); }
   }
-  // upload done
-  renderGallery();
-  renderSubChips();
+  renderGallery(); renderSubChips();
   if (added > 0) toast(added + ' fotoğraf yüklendi ✓');
 }
 
 function compressToBlob(file, maxW, quality) {
-  return new Promise(function(resolve, reject) {
+  return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = function() {
@@ -987,53 +941,31 @@ function compressToBlob(file, maxW, quality) {
       canvas.width = Math.round(img.width * scale);
       canvas.height = Math.round(img.height * scale);
       canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(function(blob) {
-        URL.revokeObjectURL(url);
-        resolve(blob);
-      }, 'image/jpeg', quality);
+      canvas.toBlob(function(blob) { URL.revokeObjectURL(url); resolve(blob); }, 'image/jpeg', quality);
     };
     img.onerror = function() { reject(new Error('Görsel okunamadı')); };
     img.src = url;
   });
 }
 
-/* ═══════════════════════════════════════
-   MODAL / TOAST
-═══════════════════════════════════════ */
+// ── MODAL / TOAST ──
 function showModal(html) {
-  document.getElementById('mw').innerHTML =
-    '<div class="ov" onclick="if(event.target.classList.contains(\'ov\'))closeModal()">' +
-    '<div class="md">' + html + '</div></div>';
+  document.getElementById('mw').innerHTML = '<div class="ov" onclick="if(event.target.classList.contains(\'ov\'))closeModal()"><div class="md">' + html + '</div></div>';
 }
 function closeModal() { document.getElementById('mw').innerHTML = ''; }
 
 function toast(msg) {
   const el = document.createElement('div');
-  el.className = 'toast';
-  el.textContent = msg;
+  el.className = 'toast'; el.textContent = msg;
   document.body.appendChild(el);
-  setTimeout(function() { el.remove(); }, 2800);
+  setTimeout(() => el.remove(), 2800);
 }
 
-function showToast(msg, persist) {
-  const el = document.createElement('div');
-  el.className = 'toast';
-  el.textContent = msg;
-  document.body.appendChild(el);
-  if (!persist) setTimeout(function() { el.remove(); }, 2800);
-  return el;
-}
-
-/* ═══════════════════════════════════════
-   KEYBOARD
-═══════════════════════════════════════ */
 document.getElementById('q').addEventListener('keydown', function(e) {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doSearch(); }
 });
 
-/* ═══════════════════════════════════════
-   LOADING SCREEN ANIMATION
-═══════════════════════════════════════ */
+// ── LOADING ANIMATION ──
 (function() {
   const shapes = ['⭐','🌸','💫','✨','🌟','💕','🎀','👗','💎','🌺','⚡','🦋'];
   const wrap = document.getElementById('lss');
@@ -1051,9 +983,7 @@ document.getElementById('q').addEventListener('keydown', function(e) {
   }
 })();
 
-/* ═══════════════════════════════════════
-   BOOT
-═══════════════════════════════════════ */
+// ── BOOT ──
 initApp();
 </script>
 
