@@ -684,15 +684,22 @@ async function fetchImages(query, genderHint) {
   renderPins();
   
   // Sonra Claude ile görsel analizi yaparak rozeti güncelle (arka planda)
+  console.log('🎯 CLAUDE_KEY:', !!CLAUDE_KEY, 'galleryProfile:', galleryProfile);
   if (CLAUDE_KEY && galleryProfile && galleryProfile.length) {
     analyzeAndUpdateBadges(pinResults, galleryProfile);
+  } else if (!CLAUDE_KEY) {
+    toast('💡 Claude key ekleyin → gardrop eşleşmesi aktif olur');
+  } else if (!galleryProfile || !galleryProfile.length) {
+    toast('💡 Gardrobunuza fotoğraf ekleyin → eşleşme aktif olur');  
   }
 }
 
 async function fetchGoogle(query) {
   if (!GOOGLE_KEY) return [];
   try {
-    const pq = 'site:pinterest.com ' + query + ' outfit fashion';
+    // Geleneksel/dini/etnik kıyafetleri arama sorgusundan hariç tut
+    const exclusions = '-thobe -kaftan -abaya -hijab -niqab -kurta -jalabiya -islamic -muslim -prayer -ethnic -traditional -kufi -turban';
+    const pq = 'site:pinterest.com ' + query + ' outfit fashion ' + exclusions;
     const url = 'https://kombinai.semihcanyanar.workers.dev?q=' + encodeURIComponent(pq) + '&key=' + GOOGLE_KEY;
     const d = await fetch(url).then(r => r.json()).catch(() => ({}));
     return (d.images_results || []).map(item => ({
@@ -832,10 +839,12 @@ function galScore(img, genderGal, galleryProfile) {
 // ── RENDER PINS ──
 // Arka planda görselleri analiz et — TÜM parçalar gardropta varsa rozet
 async function analyzeAndUpdateBadges(imgs, wardrobeItems) {
+  console.log('🔍 Analyzing badges. Wardrobe items:', wardrobeItems);
   const toAnalyze = imgs.slice(0, 10);
   for (const img of toAnalyze) {
     try {
       const pinItems = await analyzePinImage(img.url);
+      console.log('👗 Pin items for', img.url.slice(-30), ':', pinItems);
       if (!pinItems || !pinItems.length) continue;
       
       // KOMBİNDEKİ TEMEL PARÇALAR gardropta var mı? (üst + alt veya dış giyim)
