@@ -670,9 +670,9 @@ async function fetchImages(query, genderHint) {
     s: galScore(img, genderGal, galleryProfile) 
   }));
   scored.sort((a, b) => b.s - a.s);
+  // Skoru direkt img objesine yaz
+  scored.forEach(item => { item.img._score = item.s; });
   pinResults = scored.map(x => x.img);
-  // Skor bilgisini de sakla (rozet için)
-  pinResults.forEach((img, i) => { img._score = scored[i] ? scored[i].s : 0; });
   renderPins();
 }
 
@@ -727,9 +727,10 @@ function galScore(img, genderGal, galleryProfile) {
   if (!genderGal || !genderGal.length) return 0;
   const imgTags = (img.tags || []).map(t => t.toLowerCase());
   const imgTitle = (img.title || '').toLowerCase();
-  const allText = imgTags.join(' ') + ' ' + imgTitle;
-  
-  // AI profili varsa kullan
+  const imgSource = (img.source || '').toLowerCase();
+  const allText = imgTags.join(' ') + ' ' + imgTitle + ' ' + imgSource;
+
+  // AI profili varsa kullan (Claude key girildiyse)
   if (galleryProfile && galleryProfile.length) {
     let score = 0;
     galleryProfile.forEach(kw => {
@@ -737,15 +738,31 @@ function galScore(img, genderGal, galleryProfile) {
     });
     return score;
   }
-  
-  // Fallback: alt albüm keyword match
+
+  // Fallback: cinsiyet + tarz eşleşmesi
+  // Cinsiyet bazlı anahtar kelimeler
+  const genderKw = {
+    'Kadın': ['women','woman','female','lady','ladies','girl','feminine','kadın'],
+    'Erkek': ['men','man','male','guy','masculine','erkek'],
+    'Kız Çocuk': ['girl','girls','kids','children','child','kız'],
+    'Erkek Çocuk': ['boy','boys','kids','children','child','erkek']
+  };
+  const curGenderKw = genderKw[genderGal[0] && genderGal[0].gender] || [];
+  let score = 0;
+  curGenderKw.forEach(k => { if (allText.includes(k)) score++; });
+
+  // Alt albüm keyword match
   const kw = new Set();
   genderGal.forEach(g => {
     (g.subAlbum || '').toLowerCase().split(' ').forEach(w => { if (w.length > 2) kw.add(w); });
-    (g.name || '').toLowerCase().split(/[\s_-]+/).forEach(w => { if (w.length > 2) kw.add(w); });
+    (g.name || '').toLowerCase().split(/[\s_.-]+/).forEach(w => { if (w.length > 2) kw.add(w); });
   });
-  let score = 0;
-  kw.forEach(k => { if (allText.includes(k)) score++; });
+  kw.forEach(k => { if (allText.includes(k)) score += 2; });
+
+  // Temel stil kelimeleri varsa +1
+  const styleKw = ['outfit','fashion','style','look','wear','kombin','ootd','casual','streetwear','formal'];
+  styleKw.forEach(k => { if (allText.includes(k)) score += 0.5; });
+
   return score;
 }
 
