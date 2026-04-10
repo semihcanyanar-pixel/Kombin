@@ -464,18 +464,17 @@ async function saveKeys() {
   const cx     = document.getElementById('inp-cx').value.trim();
   const claude = document.getElementById('inp-claude').value.trim();
 
-  if (!gkey || !cx) { toast('Google Key ve CX zorunlu!'); return; }
+  if (!gkey) { toast('SerpAPI Key zorunlu!'); return; }
   if (!userId) { toast('Giriş bekleniyor...'); return; }
 
   try {
     await _db.collection('users').doc(userId).collection('settings').doc('apikeys').set({
       googleKey: gkey,
-      googleCx: cx,
+      googleCx: cx || '',
       claudeKey: claude,
       updatedAt: Date.now()
     });
     if (gkey)   GOOGLE_KEY = gkey;
-    if (cx)     GOOGLE_CX  = cx;
     if (claude) CLAUDE_KEY = claude;
 
     toast('API key\'ler kaydedildi ✓');
